@@ -6,6 +6,15 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		1C8FC7C82EB86C2E00E7C877 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 1C8FC7C72EB86C2E00E7C877 /* Auth */; };
+		1C8FC7CA2EB86C2E00E7C877 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = 1C8FC7C92EB86C2E00E7C877 /* Functions */; };
+		1C8FC7CC2EB86C2E00E7C877 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 1C8FC7CB2EB86C2E00E7C877 /* PostgREST */; };
+		1C8FC7CE2EB86C2E00E7C877 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 1C8FC7CD2EB86C2E00E7C877 /* Realtime */; };
+		1C8FC7D02EB86C2E00E7C877 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 1C8FC7CF2EB86C2E00E7C877 /* Storage */; };
+		1C8FC7D42EB8732700E7C877 /* Config.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 1C8FC7D32EB8732700E7C877 /* Config.xcconfig */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		DB2A1C252EB574880090EF94 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,14 +33,28 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1C8FC7D32EB8732700E7C877 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		DB2A1C172EB574860090EF94 /* UniVerse.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UniVerse.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DB2A1C242EB574880090EF94 /* UniVerseTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UniVerseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DB2A1C2E2EB574880090EF94 /* UniVerseUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UniVerseUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		1C8FC7E22EB87CB800E7C877 /* Exceptions for "UniVerse" folder in "UniVerse" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DB2A1C162EB574860090EF94 /* UniVerse */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DB2A1C192EB574860090EF94 /* UniVerse */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				1C8FC7E22EB87CB800E7C877 /* Exceptions for "UniVerse" folder in "UniVerse" target */,
+			);
 			path = UniVerse;
 			sourceTree = "<group>";
 		};
@@ -52,6 +75,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1C8FC7CC2EB86C2E00E7C877 /* PostgREST in Frameworks */,
+				1C8FC7CA2EB86C2E00E7C877 /* Functions in Frameworks */,
+				1C8FC7C82EB86C2E00E7C877 /* Auth in Frameworks */,
+				1C8FC7D02EB86C2E00E7C877 /* Storage in Frameworks */,
+				1C8FC7CE2EB86C2E00E7C877 /* Realtime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -75,6 +103,7 @@
 		DB2A1C0E2EB574860090EF94 = {
 			isa = PBXGroup;
 			children = (
+				1C8FC7D32EB8732700E7C877 /* Config.xcconfig */,
 				DB2A1C192EB574860090EF94 /* UniVerse */,
 				DB2A1C272EB574880090EF94 /* UniVerseTests */,
 				DB2A1C312EB574880090EF94 /* UniVerseUITests */,
@@ -112,6 +141,11 @@
 			);
 			name = UniVerse;
 			packageProductDependencies = (
+				1C8FC7C72EB86C2E00E7C877 /* Auth */,
+				1C8FC7C92EB86C2E00E7C877 /* Functions */,
+				1C8FC7CB2EB86C2E00E7C877 /* PostgREST */,
+				1C8FC7CD2EB86C2E00E7C877 /* Realtime */,
+				1C8FC7CF2EB86C2E00E7C877 /* Storage */,
 			);
 			productName = UniVerse;
 			productReference = DB2A1C172EB574860090EF94 /* UniVerse.app */;
@@ -195,6 +229,9 @@
 			);
 			mainGroup = DB2A1C0E2EB574860090EF94;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				1C8FC7C62EB86C2E00E7C877 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DB2A1C182EB574860090EF94 /* Products */;
 			projectDirPath = "";
@@ -212,6 +249,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1C8FC7D42EB8732700E7C877 /* Config.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -390,6 +428,7 @@
 		};
 		DB2A1C392EB574880090EF94 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1C8FC7D32EB8732700E7C877 /* Config.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -397,6 +436,9 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = UniVerse/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -417,6 +459,7 @@
 		};
 		DB2A1C3A2EB574880090EF94 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1C8FC7D32EB8732700E7C877 /* Config.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -424,6 +467,9 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = UniVerse/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -550,6 +596,45 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		1C8FC7C62EB86C2E00E7C877 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1C8FC7C72EB86C2E00E7C877 /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1C8FC7C62EB86C2E00E7C877 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		1C8FC7C92EB86C2E00E7C877 /* Functions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1C8FC7C62EB86C2E00E7C877 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Functions;
+		};
+		1C8FC7CB2EB86C2E00E7C877 /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1C8FC7C62EB86C2E00E7C877 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
+		1C8FC7CD2EB86C2E00E7C877 /* Realtime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1C8FC7C62EB86C2E00E7C877 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Realtime;
+		};
+		1C8FC7CF2EB86C2E00E7C877 /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1C8FC7C62EB86C2E00E7C877 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = DB2A1C0F2EB574860090EF94 /* Project object */;
 }
