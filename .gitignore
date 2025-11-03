@@ -72,4 +72,5 @@ Secrets.plist
 .vscode/
 .idea/
 
+Config.xcconfig
 
