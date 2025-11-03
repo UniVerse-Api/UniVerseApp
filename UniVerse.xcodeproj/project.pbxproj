@@ -9,10 +9,11 @@
 /* Begin PBXBuildFile section */
 		1C8FC7C82EB86C2E00E7C877 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 1C8FC7C72EB86C2E00E7C877 /* Auth */; };
 		1C8FC7CA2EB86C2E00E7C877 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = 1C8FC7C92EB86C2E00E7C877 /* Functions */; };
-		1C8FC7CC2EB86C2E00E7C877 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 1C8FC7CB2EB86C2E00E7C877 /* PostgREST */; };
+		1C8FC7CC2EB86C2E00E7C877 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 1C8FC7CB2EB86C2E00E7C877 /* PostgREST */; settings = {ATTRIBUTES = (Required, ); }; };
 		1C8FC7CE2EB86C2E00E7C877 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 1C8FC7CD2EB86C2E00E7C877 /* Realtime */; };
 		1C8FC7D02EB86C2E00E7C877 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 1C8FC7CF2EB86C2E00E7C877 /* Storage */; };
 		1C8FC7D42EB8732700E7C877 /* Config.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 1C8FC7D32EB8732700E7C877 /* Config.xcconfig */; };
+		1C8FC7FD2EB8845300E7C877 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 1C8FC7FC2EB8845300E7C877 /* Supabase */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -77,6 +78,7 @@
 			files = (
 				1C8FC7CC2EB86C2E00E7C877 /* PostgREST in Frameworks */,
 				1C8FC7CA2EB86C2E00E7C877 /* Functions in Frameworks */,
+				1C8FC7FD2EB8845300E7C877 /* Supabase in Frameworks */,
 				1C8FC7C82EB86C2E00E7C877 /* Auth in Frameworks */,
 				1C8FC7D02EB86C2E00E7C877 /* Storage in Frameworks */,
 				1C8FC7CE2EB86C2E00E7C877 /* Realtime in Frameworks */,
@@ -100,6 +102,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1C8FC7FB2EB8845300E7C877 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		DB2A1C0E2EB574860090EF94 = {
 			isa = PBXGroup;
 			children = (
@@ -107,6 +116,7 @@
 				DB2A1C192EB574860090EF94 /* UniVerse */,
 				DB2A1C272EB574880090EF94 /* UniVerseTests */,
 				DB2A1C312EB574880090EF94 /* UniVerseUITests */,
+				1C8FC7FB2EB8845300E7C877 /* Frameworks */,
 				DB2A1C182EB574860090EF94 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -146,6 +156,7 @@
 				1C8FC7CB2EB86C2E00E7C877 /* PostgREST */,
 				1C8FC7CD2EB86C2E00E7C877 /* Realtime */,
 				1C8FC7CF2EB86C2E00E7C877 /* Storage */,
+				1C8FC7FC2EB8845300E7C877 /* Supabase */,
 			);
 			productName = UniVerse;
 			productReference = DB2A1C172EB574860090EF94 /* UniVerse.app */;
@@ -633,6 +644,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1C8FC7C62EB86C2E00E7C877 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Storage;
+		};
+		1C8FC7FC2EB8845300E7C877 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1C8FC7C62EB86C2E00E7C877 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
