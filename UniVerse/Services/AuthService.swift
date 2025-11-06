@@ -17,13 +17,23 @@ class AuthService {
             password: password
         )
         
-        guard let userId = authResponse.user?.id else {
+        guard let userId = authResponse.user.id else {
             throw AuthError.registroFallido
         }
         
         // 2. Llamar a la function de Supabase
-        var datosCompletos = datos
-        datosCompletos.pIdUsuario = userId
+        var datosCompletos = RegistroEstudianteRequest(
+            pIdUsuario: userId,
+            pNombreCompleto: datos.pNombreCompleto,
+            pBiografia: datos.pBiografia,
+            pUbicacion: datos.pUbicacion,
+            pTelefono: datos.pTelefono,
+            pNombreComercial: datos.pNombreComercial,
+            pCarrera: datos.pCarrera,
+            pUniversidadActual: datos.pUniversidadActual,
+            pFotoPerfil: datos.pFotoPerfil,
+            pSitioWeb: datos.pSitioWeb
+        )
         
         let response: RegistroResponse = try await client
             .rpc("registrar_estudiante", params: datosCompletos)
@@ -47,7 +57,3 @@ class AuthService {
     }
 }
 
-enum AuthError: Error {
-    case registroFallido
-    case perfilNoCreado
-}

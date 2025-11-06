@@ -1,4 +1,6 @@
 // Views/RegistroEstudianteView.swift
+import SwiftUI
+
 struct RegistroEstudianteView: View {
     @EnvironmentObject var authVM: AuthViewModel
     

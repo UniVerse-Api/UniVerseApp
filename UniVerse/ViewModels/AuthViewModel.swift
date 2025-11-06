@@ -28,11 +28,10 @@ class AuthViewModel: ObservableObject {
             do {
                 let session = try await supabase.auth.session
                 
-                if let userId = session.user.id {
-                    await loadUserData(userId: userId)
-                    self.isAuthenticated = true
-                    self.initialView = .feed
-                }
+                let userId = session.user.id
+                await loadUserData(userId: userId)
+                self.isAuthenticated = true
+                self.initialView = .feed
                 
                 self.isLoading = false
                 
@@ -84,9 +83,7 @@ class AuthViewModel: ObservableObject {
                 password: password
             )
             
-            guard let userId = authResponse.user.id else {
-                throw AuthError.registroFallido
-            }
+            let userId = authResponse.user.id
             
             // 2. Llamar function de Supabase
             let datos = RegistroEstudianteRequest(
@@ -112,7 +109,7 @@ class AuthViewModel: ObservableObject {
                 self.isAuthenticated = true
                 self.initialView = .feed
             } else {
-                throw AuthError.errorEnPerfil(response.error ?? "Error desconocido")
+                throw AuthError.perfilNoCreado
             }
             
             self.isLoading = false
@@ -144,9 +141,7 @@ class AuthViewModel: ObservableObject {
                 password: password
             )
             
-            guard let userId = authResponse.user.id else {
-                throw AuthError.registroFallido
-            }
+            let userId = authResponse.user.id
             
             // Aquí llamarías a tu function registrar_empresa
             let datos = RegistroEmpresaRequest(
@@ -170,7 +165,7 @@ class AuthViewModel: ObservableObject {
                 self.isAuthenticated = true
                 self.initialView = .feed
             } else {
-                throw AuthError.errorEnPerfil(response.error ?? "Error desconocido")
+                throw AuthError.perfilNoCreado
             }
             
             self.isLoading = false
@@ -221,14 +216,14 @@ class AuthViewModel: ObservableObject {
 
 enum AuthError: LocalizedError {
     case registroFallido
-    case errorEnPerfil(String)
+    case perfilNoCreado
     
     var errorDescription: String? {
         switch self {
         case .registroFallido:
             return "No se pudo crear la cuenta"
-        case .errorEnPerfil(let mensaje):
-            return "Error al crear perfil: \(mensaje)"
+        case .perfilNoCreado:
+            return "Error al crear el perfil"
         }
     }
 }
