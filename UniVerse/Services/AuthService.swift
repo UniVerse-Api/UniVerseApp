@@ -2,10 +2,7 @@
 import Supabase
 
 class AuthService {
-    private let client = SupabaseClient(
-        supabaseURL: URL(string: "YOUR_SUPABASE_URL")!,
-        supabaseKey: "YOUR_SUPABASE_ANON_KEY"
-    )
+    private let client = SupabaseManager.shared.client
     
     // Registro completo
     func registrarEstudiante(
