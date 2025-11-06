@@ -1,4 +1,5 @@
 // config/SupabaseManager.swift
+
 import Foundation
 import Supabase
 
