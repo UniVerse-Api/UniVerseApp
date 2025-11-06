@@ -1,21 +1,25 @@
 // App.swift
+import SwiftUI
+
 @main
 struct UniVerseApp: App {
     @StateObject private var authVM = AuthViewModel()
     
     var body: some Scene {
         WindowGroup {
-            if authVM.isLoading {
-                ProgressView("Cargando...")
-            } else {
-                if authVM.isAuthenticated {
-                    FeedView()
-                        .environmentObject(authVM)
+            Group {
+                if authVM.isLoading {
+                    SplashScreen()  
                 } else {
-                    AuthView()
-                        .environmentObject(authVM)
+                    switch authVM.initialView {
+                    case .auth:
+                        AuthView()  
+                    case .feed:
+                        FeedView()  
+                    }
                 }
             }
+            .environmentObject(authVM)
         }
     }
 }
