@@ -78,6 +78,10 @@ CREATE TABLE Perfil_estudiante (
     fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE Perfil_estudiante
+ALTER COLUMN nombre_comercial DROP NOT NULL;
+
+
 -- Tabla Experiencia
 CREATE TABLE Experiencia (
     id_experiencia SERIAL PRIMARY KEY,
