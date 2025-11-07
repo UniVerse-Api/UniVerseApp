@@ -4,7 +4,7 @@ import SwiftUI
 struct UniVerseApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView() // ✅ Así es más fácil de previsualizar
+            ContentView() 
         }
     }
 }
