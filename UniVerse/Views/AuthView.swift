@@ -170,7 +170,7 @@ struct AuthView: View {
                             .font(.system(size: 13))
                             .foregroundColor(.textSecondary)
                         
-                        NavigationLink(destination: RegistroEstudianteView()) {
+                        NavigationLink(destination: SeleccionTipoRegistroView().environmentObject(authVM)) {
                             Text("Registrarse")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(.primaryOrange)

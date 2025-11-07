@@ -5,9 +5,8 @@ struct FeedView: View {
     @EnvironmentObject var authVM: AuthViewModel
     
     var body: some View {
-        NavigationView {
-            VStack {
-                // Header con información del usuario - SIEMPRE SE MUESTRA
+        VStack {
+                // Header con información del usuario
                 HStack {
                     VStack(alignment: .leading) {
                         Text("Bienvenido")
@@ -48,6 +47,8 @@ struct FeedView: View {
                         .foregroundColor(.red)
                     }
                 }
+                .padding()
+                .background(Color(.systemGray6))
                 .padding()
                 .background(Color(.systemGray6))
                 
@@ -119,11 +120,13 @@ struct FeedView: View {
                 Spacer()
             }
             .navigationBarHidden(true)
-        }
     }
 }
 
 #Preview {
-    FeedView()
-        .environmentObject(AuthViewModel())
+    NavigationView {
+        FeedView()
+            .environmentObject(AuthViewModel())
+    }
 }
+

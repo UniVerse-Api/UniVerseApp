@@ -4,18 +4,21 @@ struct ContentView: View {
     @StateObject private var authVM = AuthViewModel()
     
     var body: some View {
-        Group {
-            if authVM.isLoading {
-                SplashScreen()
-            } else {
-                switch authVM.initialView {
-                case .auth:
-                    AuthView()
-                case .feed:
-                    FeedView()
+        NavigationView {
+            Group {
+                if authVM.isLoading {
+                    SplashScreen()
+                } else {
+                    switch authVM.initialView {
+                    case .auth:
+                        AuthView()
+                    case .feed:
+                        FeedView()
+                    }
                 }
             }
         }
+        .navigationViewStyle(StackNavigationViewStyle())
         .environmentObject(authVM)
     }
 }
