@@ -97,7 +97,7 @@ let habilidadesPorCategoria = [
         "Gestión de presupuestos",
         "Inversiones",
         "Planificación fiscal"
-    ]
+    ],
     "Biología": [
         "Técnicas de laboratorio",
         "Análisis genético",
