@@ -2,6 +2,7 @@
 import SwiftUI
 
 struct SeleccionTipoRegistroView: View {
+    @EnvironmentObject var authVM: AuthViewModel
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
@@ -24,7 +25,7 @@ struct SeleccionTipoRegistroView: View {
                     
                     // Botones de selección
                     VStack(spacing: 12) {
-                        NavigationLink(destination: RegistroEmpresaView()) {
+                        NavigationLink(destination: RegistroEmpresaView().environmentObject(authVM)) {
                             Text("Empresa")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(.white)
@@ -34,7 +35,7 @@ struct SeleccionTipoRegistroView: View {
                                 .cornerRadius(8)
                         }
                         
-                        NavigationLink(destination: RegistroUniversidadView()) {
+                        NavigationLink(destination: RegistroUniversidadView().environmentObject(authVM)) {
                             Text("Universidad")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(.white)
@@ -44,7 +45,7 @@ struct SeleccionTipoRegistroView: View {
                                 .cornerRadius(8)
                         }
                         
-                        NavigationLink(destination: RegistroEstudianteView()) {
+                        NavigationLink(destination: RegistroEstudianteView().environmentObject(authVM)) {
                             Text("Estudiante")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(.white)
@@ -96,5 +97,6 @@ struct SeleccionTipoRegistroView: View {
 #Preview {
     NavigationView {
         SeleccionTipoRegistroView()
+            .environmentObject(AuthViewModel())
     }
 }
