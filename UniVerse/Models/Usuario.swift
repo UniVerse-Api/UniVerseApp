@@ -15,6 +15,37 @@ struct Usuario: Codable, Identifiable {
         case fechaCreacion = "fecha_creacion"
         case perfil = "Perfil"
     }
+    
+    // Decodificador personalizado para manejar perfil como array o objeto
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(UUID.self, forKey: .id)
+        rol = try container.decode(RolUsuario.self, forKey: .rol)
+        estado = try container.decode(EstadoUsuario.self, forKey: .estado)
+        fechaCreacion = try container.decode(Date.self, forKey: .fechaCreacion)
+        
+        // Intentar decodificar perfil como objeto único
+        if let perfilObject = try? container.decode(Perfil.self, forKey: .perfil) {
+            perfil = perfilObject
+        } else if let perfilArray = try? container.decode([Perfil].self, forKey: .perfil) {
+            // Si viene como array, tomar el primero
+            perfil = perfilArray.first
+        } else {
+            perfil = nil
+        }
+    }
+    
+    // Encoder personalizado
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(id, forKey: .id)
+        try container.encode(rol, forKey: .rol)
+        try container.encode(estado, forKey: .estado)
+        try container.encode(fechaCreacion, forKey: .fechaCreacion)
+        try container.encodeIfPresent(perfil, forKey: .perfil)
+    }
 }
 
 enum RolUsuario: String, Codable {
@@ -51,6 +82,53 @@ struct Perfil: Codable, Identifiable {
         case sitioWeb = "sitio_web"
         case perfilEstudiante = "Perfil_estudiante"
         case perfilEmpresa = "Perfil_empresa"
+    }
+    
+    // Decodificador personalizado para manejar subobjetos que pueden venir como arrays
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(Int.self, forKey: .id)
+        idUsuario = try container.decode(UUID.self, forKey: .idUsuario)
+        nombreCompleto = try container.decode(String.self, forKey: .nombreCompleto)
+        fotoPerfil = try container.decodeIfPresent(String.self, forKey: .fotoPerfil)
+        biografia = try container.decode(String.self, forKey: .biografia)
+        ubicacion = try container.decode(String.self, forKey: .ubicacion)
+        telefono = try container.decode(String.self, forKey: .telefono)
+        sitioWeb = try container.decodeIfPresent(String.self, forKey: .sitioWeb)
+        
+        // Manejar perfilEstudiante
+        if let estudianteObject = try? container.decode(PerfilEstudiante.self, forKey: .perfilEstudiante) {
+            perfilEstudiante = estudianteObject
+        } else if let estudianteArray = try? container.decode([PerfilEstudiante].self, forKey: .perfilEstudiante) {
+            perfilEstudiante = estudianteArray.first
+        } else {
+            perfilEstudiante = nil
+        }
+        
+        // Manejar perfilEmpresa
+        if let empresaObject = try? container.decode(PerfilEmpresa.self, forKey: .perfilEmpresa) {
+            perfilEmpresa = empresaObject
+        } else if let empresaArray = try? container.decode([PerfilEmpresa].self, forKey: .perfilEmpresa) {
+            perfilEmpresa = empresaArray.first
+        } else {
+            perfilEmpresa = nil
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(id, forKey: .id)
+        try container.encode(idUsuario, forKey: .idUsuario)
+        try container.encode(nombreCompleto, forKey: .nombreCompleto)
+        try container.encodeIfPresent(fotoPerfil, forKey: .fotoPerfil)
+        try container.encode(biografia, forKey: .biografia)
+        try container.encode(ubicacion, forKey: .ubicacion)
+        try container.encode(telefono, forKey: .telefono)
+        try container.encodeIfPresent(sitioWeb, forKey: .sitioWeb)
+        try container.encodeIfPresent(perfilEstudiante, forKey: .perfilEstudiante)
+        try container.encodeIfPresent(perfilEmpresa, forKey: .perfilEmpresa)
     }
 }
 

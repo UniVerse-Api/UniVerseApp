@@ -17,9 +17,7 @@ class AuthService {
             password: password
         )
         
-        guard let userId = authResponse.user.id else {
-            throw AuthError.registroFallido
-        }
+        let userId = authResponse.user.id
         
         // 2. Llamar a la function de Supabase
         var datosCompletos = RegistroEstudianteRequest(

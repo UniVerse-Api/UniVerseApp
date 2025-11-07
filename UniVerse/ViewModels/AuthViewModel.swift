@@ -42,23 +42,73 @@ class AuthViewModel: ObservableObject {
         }
     }
     
-    // Cargar datos del usuario
+    // Cargar datos del usuario (método principal - usa separación de consultas)
     private func loadUserData(userId: UUID) async {
+        await loadUserDataFallback(userId: userId)
+    }
+    
+    // Método alternativo de carga de datos (consultas separadas)
+    private func loadUserDataFallback(userId: UUID) async {
         do {
-            let response: [Usuario] = try await supabase
-                .from("Usuario")
-                .select("*, Perfil(*)")
+            // 1. Cargar usuario base
+            let userResponse: [Usuario] = try await supabase
+                .from("usuario")
+                .select("id_usuario, rol, estado, fecha_creacion")
                 .eq("id_usuario", value: userId.uuidString)
                 .execute()
                 .value
             
-            self.currentUser = response.first
+            guard var usuario = userResponse.first else {
+                self.errorMessage = "Usuario no encontrado"
+                return
+            }
+            
+            // 2. Cargar perfil base
+            let perfilResponse: [Perfil] = try await supabase
+                .from("perfil")
+                .select("id_perfil, id_usuario, nombre_completo, foto_perfil, biografia, ubicacion, telefono, sitio_web")
+                .eq("id_usuario", value: userId.uuidString)
+                .execute()
+                .value
+            
+            if var perfil = perfilResponse.first {
+                
+                // 3. Cargar detalles específicos según el rol
+                if usuario.rol == .estudiante {
+                    let estudianteResponse: [PerfilEstudiante] = try await supabase
+                        .from("perfil_estudiante")
+                        .select("*")
+                        .eq("id_perfil", value: perfil.id)
+                        .execute()
+                        .value
+                    
+                    perfil.perfilEstudiante = estudianteResponse.first
+                    
+                } else if usuario.rol == .empresa {
+                    let empresaResponse: [PerfilEmpresa] = try await supabase
+                        .from("perfil_empresa")
+                        .select("*")
+                        .eq("id_perfil", value: perfil.id)
+                        .execute()
+                        .value
+                    
+                    perfil.perfilEmpresa = empresaResponse.first
+                }
+                
+                usuario.perfil = perfil
+                
+            } else {
+                self.errorMessage = "Perfil no encontrado"
+            }
+            
+            self.currentUser = usuario
             
         } catch {
-            print("Error cargando usuario: \(error)")
             self.errorMessage = error.localizedDescription
         }
     }
+    
+
     
     // REGISTRO ESTUDIANTE
     func registrarEstudiante(
@@ -210,6 +260,16 @@ class AuthViewModel: ObservableObject {
             
         } catch {
             throw error
+        }
+    }
+    
+    // Función para recargar datos del usuario actual
+    func reloadCurrentUser() async {
+        do {
+            let session = try await supabase.auth.session
+            await loadUserData(userId: session.user.id)
+        } catch {
+            self.errorMessage = error.localizedDescription
         }
     }
 }

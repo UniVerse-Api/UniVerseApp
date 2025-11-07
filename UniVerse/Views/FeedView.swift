@@ -7,18 +7,38 @@ struct FeedView: View {
     var body: some View {
         NavigationView {
             VStack {
-                // Header con información del usuario
-                if let user = authVM.currentUser {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text("Bienvenido")
-                                .font(.headline)
-                            Text(user.perfil?.nombreCompleto ?? "Usuario")
+                // Header con información del usuario - SIEMPRE SE MUESTRA
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text("Bienvenido")
+                            .font(.headline)
+                        if let user = authVM.currentUser {
+                            if let perfil = user.perfil {
+                                Text(perfil.nombreCompleto)
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                            } else {
+                                Text("Perfil no disponible")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.orange)
+                            }
+                        } else {
+                            Text("Cargando...")
                                 .font(.title2)
                                 .fontWeight(.bold)
                         }
-                        
-                        Spacer()
+                    }
+                    
+                    Spacer()
+                    
+                    HStack {
+                        Button("🔄") {
+                            Task {
+                                await authVM.reloadCurrentUser()
+                            }
+                        }
+                        .foregroundColor(.blue)
                         
                         Button("Cerrar sesión") {
                             Task {
@@ -27,9 +47,9 @@ struct FeedView: View {
                         }
                         .foregroundColor(.red)
                     }
-                    .padding()
-                    .background(Color(.systemGray6))
                 }
+                .padding()
+                .background(Color(.systemGray6))
                 
                 // Contenido principal del feed
                 ScrollView {

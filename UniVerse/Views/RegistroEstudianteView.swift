@@ -60,3 +60,10 @@ struct RegistroEstudianteView: View {
         .navigationTitle("Registro Estudiante")
     }
 }
+
+#Preview {
+    NavigationView {
+        RegistroEstudianteView()
+            .environmentObject(AuthViewModel())
+    }
+}
