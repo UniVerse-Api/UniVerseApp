@@ -34,4 +34,6 @@ extension Color {
     static let cardBackground = Color(hex: "161B22")
     static let inputBackground = Color(hex: "0D1117")
     static let borderColor = Color(hex: "30363D")
+    static let backgroundLight = Color(hex: "F5F6F8")
+
 }
