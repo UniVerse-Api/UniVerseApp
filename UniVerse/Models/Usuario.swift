@@ -68,6 +68,7 @@ struct Perfil: Codable, Identifiable {
     let ubicacion: String
     let telefono: String
     let sitioWeb: String?
+    let pais: String  // NUEVO CAMPO
     var perfilEstudiante: PerfilEstudiante?
     var perfilEmpresa: PerfilEmpresa?
     
@@ -80,6 +81,7 @@ struct Perfil: Codable, Identifiable {
         case ubicacion
         case telefono
         case sitioWeb = "sitio_web"
+        case pais  // NUEVO CAMPO
         case perfilEstudiante = "Perfil_estudiante"
         case perfilEmpresa = "Perfil_empresa"
     }
@@ -96,7 +98,8 @@ struct Perfil: Codable, Identifiable {
         ubicacion = try container.decode(String.self, forKey: .ubicacion)
         telefono = try container.decode(String.self, forKey: .telefono)
         sitioWeb = try container.decodeIfPresent(String.self, forKey: .sitioWeb)
-        
+        pais = try container.decode(String.self, forKey: .pais)  // NUEVO CAMPO
+
         // Manejar perfilEstudiante
         if let estudianteObject = try? container.decode(PerfilEstudiante.self, forKey: .perfilEstudiante) {
             perfilEstudiante = estudianteObject
@@ -127,6 +130,7 @@ struct Perfil: Codable, Identifiable {
         try container.encode(ubicacion, forKey: .ubicacion)
         try container.encode(telefono, forKey: .telefono)
         try container.encodeIfPresent(sitioWeb, forKey: .sitioWeb)
+        try container.encode(pais, forKey: .pais)  // NUEVO CAMPO
         try container.encodeIfPresent(perfilEstudiante, forKey: .perfilEstudiante)
         try container.encodeIfPresent(perfilEmpresa, forKey: .perfilEmpresa)
     }

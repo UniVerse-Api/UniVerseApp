@@ -14,6 +14,7 @@ struct RegistroEstudianteRequest: Codable {
     let pUniversidadActual: String?
     let pFotoPerfil: String?
     let pSitioWeb: String?
+    let pPais: String  // NUEVO CAMPO
     
     enum CodingKeys: String, CodingKey {
         case pIdUsuario = "p_id_usuario"
@@ -26,6 +27,7 @@ struct RegistroEstudianteRequest: Codable {
         case pUniversidadActual = "p_universidad_actual"
         case pFotoPerfil = "p_foto_perfil"
         case pSitioWeb = "p_sitio_web"
+        case pPais = "p_pais"
     }
 }
 

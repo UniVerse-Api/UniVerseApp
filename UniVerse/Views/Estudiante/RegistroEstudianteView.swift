@@ -14,6 +14,8 @@ struct RegistroEstudianteView: View {
     @State private var biografia = ""
     @State private var ubicacion = ""
     @State private var universidad = ""
+    @State private var paisSeleccionado = ""
+    @State private var showPaisesDropdown = false
     @State private var acceptTerms = false
     @State private var showPassword = false
     @State private var showConfirmPassword = false
@@ -347,6 +349,101 @@ struct RegistroEstudianteView: View {
                                     )
                                 }
                                 
+                                // País - Combobox
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("País")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.textSecondary)
+                                    
+                                    VStack(spacing: 0) {
+                                        Button(action: {
+                                            withAnimation(.easeInOut(duration: 0.2)) {
+                                                showPaisesDropdown.toggle()
+                                            }
+                                        }) {
+                                            HStack(spacing: 12) {
+                                                Image(systemName: "globe")
+                                                    .foregroundColor(.textSecondary)
+                                                    .font(.system(size: 16))
+                                                    .frame(width: 20)
+                                                
+                                                Text(paisSeleccionado.isEmpty ? "Selecciona tu país" : paisSeleccionado)
+                                                    .foregroundColor(paisSeleccionado.isEmpty ? .textSecondary : .white)
+                                                    .font(.system(size: 16))
+                                                
+                                                Spacer()
+                                                
+                                                Image(systemName: showPaisesDropdown ? "chevron.up" : "chevron.down")
+                                                    .foregroundColor(.textSecondary)
+                                                    .font(.system(size: 12))
+                                            }
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 14)
+                                        }
+                                        .background(Color.inputBackground)
+                                        .cornerRadius(8)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .stroke(
+                                                    showPaisesDropdown ? Color.primaryOrange : Color.borderColor,
+                                                    lineWidth: 1
+                                                )
+                                        )
+                                        
+                                        // Dropdown lista
+                                        if showPaisesDropdown {
+                                            VStack(spacing: 0) {
+                                                ScrollView {
+                                                    LazyVStack(spacing: 0) {
+                                                        ForEach(Paises, id: \.self) { pais in
+                                                            Button(action: {
+                                                                paisSeleccionado = pais
+                                                                withAnimation(.easeInOut(duration: 0.2)) {
+                                                                    showPaisesDropdown = false
+                                                                }
+                                                            }) {
+                                                                HStack {
+                                                                    Text(pais)
+                                                                        .font(.system(size: 16))
+                                                                        .foregroundColor(.white)
+                                                                    
+                                                                    Spacer()
+                                                                    
+                                                                    if paisSeleccionado == pais {
+                                                                        Image(systemName: "checkmark")
+                                                                            .foregroundColor(.primaryOrange)
+                                                                            .font(.system(size: 14))
+                                                                    }
+                                                                }
+                                                                .padding(.horizontal, 16)
+                                                                .padding(.vertical, 12)
+                                                            }
+                                                            .background(
+                                                                paisSeleccionado == pais ? 
+                                                                Color.primaryOrange.opacity(0.1) : 
+                                                                Color.clear
+                                                            )
+                                                            
+                                                            if pais != Paises.last {
+                                                                Divider()
+                                                                    .background(Color.borderColor)
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                .frame(maxHeight: 200)
+                                            }
+                                            .background(Color.inputBackground)
+                                            .cornerRadius(8)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .stroke(Color.primaryOrange, lineWidth: 1)
+                                            )
+                                            .padding(.top, 4)
+                                        }
+                                    }
+                                }
+                                
                                 // Ubicación
                                 VStack(alignment: .leading, spacing: 6) {
                                     Text("Ubicación")
@@ -657,6 +754,14 @@ struct RegistroEstudianteView: View {
             }
         }
         .navigationBarHidden(true)
+        .onTapGesture {
+            // Cerrar dropdown si se toca fuera
+            if showPaisesDropdown {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showPaisesDropdown = false
+                }
+            }
+        }
         .alert("Error", isPresented: $showingAlert) {
             Button("OK", role: .cancel) { }
         } message: {
@@ -702,6 +807,7 @@ struct RegistroEstudianteView: View {
         !confirmPassword.isEmpty &&
         !nombreCompleto.isEmpty &&
         !telefono.isEmpty &&
+        !paisSeleccionado.isEmpty &&
         !ubicacion.isEmpty &&
         !biografia.isEmpty &&
         !carrera.isEmpty &&
@@ -746,6 +852,7 @@ struct RegistroEstudianteView: View {
                     telefono: telefono,
                     biografia: biografia,
                     ubicacion: ubicacion,
+                    pais: paisSeleccionado,
                     nombreComercial: nil,
                     universidadActual: universidad.isEmpty ? nil : universidad
                 )

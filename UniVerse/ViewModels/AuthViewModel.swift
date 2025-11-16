@@ -66,7 +66,7 @@ class AuthViewModel: ObservableObject {
             // 2. Cargar perfil base
             let perfilResponse: [Perfil] = try await supabase
                 .from("perfil")
-                .select("id_perfil, id_usuario, nombre_completo, foto_perfil, biografia, ubicacion, telefono, sitio_web")
+                .select("id_perfil, id_usuario, nombre_completo, foto_perfil, biografia, ubicacion, telefono, sitio_web, pais")  // AGREGADO pais
                 .eq("id_usuario", value: userId.uuidString)
                 .execute()
                 .value
@@ -119,6 +119,7 @@ class AuthViewModel: ObservableObject {
         telefono: String,
         biografia: String,
         ubicacion: String,
+        pais: String,  // NUEVO PARÁMETRO
         nombreComercial: String?,
         universidadActual: String?
     ) async throws {
@@ -146,7 +147,8 @@ class AuthViewModel: ObservableObject {
                 pCarrera: carrera,
                 pUniversidadActual: universidadActual,
                 pFotoPerfil: nil,
-                pSitioWeb: nil
+                pSitioWeb: nil,
+                pPais: pais  // NUEVO CAMPO
             )
             
             let response: RegistroResponse = try await supabase
