@@ -14,7 +14,8 @@ class AuthViewModel: ObservableObject {
     @Published var initialView: InitialView = .auth
     @Published var errorMessage: String?
     @Published var currentUser: Usuario?
-    
+    @Published var registrationSuccessMessage: String? = nil   // <- nuevo
+
     private let supabase = SupabaseManager.shared.client
     
     // ejecuta automaticamente al crear el ViewModel
@@ -126,6 +127,7 @@ class AuthViewModel: ObservableObject {
         
         isLoading = true
         errorMessage = nil
+        registrationSuccessMessage = nil   // limpiar previo
         
         do {
             // 1. Crear usuario en auth
@@ -157,9 +159,11 @@ class AuthViewModel: ObservableObject {
                 .value
             
             if response.success {
-                await loadUserData(userId: userId)
-                self.isAuthenticated = true
-                self.initialView = .feed
+                // No iniciar sesión automáticamente.
+                // Dejar al usuario en la pantalla de login y mostrar mensaje de éxito.
+                self.registrationSuccessMessage = "Registro exitoso. Por favor, inicia sesión."
+                self.isAuthenticated = false
+                self.initialView = .auth
             } else {
                 throw AuthError.perfilNoCreado
             }

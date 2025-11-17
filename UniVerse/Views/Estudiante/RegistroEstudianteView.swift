@@ -856,6 +856,11 @@ struct RegistroEstudianteView: View {
                     nombreComercial: nil,
                     universidadActual: universidad.isEmpty ? nil : universidad
                 )
+                
+                // Registro exitoso -> volver al login
+                // (AuthViewModel publica registrationSuccessMessage que puede ser leída en la pantalla de login)
+                presentationMode.wrappedValue.dismiss()
+                
             } catch {
                 alertMessage = error.localizedDescription
                 showingAlert = true
