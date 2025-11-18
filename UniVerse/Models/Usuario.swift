@@ -51,12 +51,16 @@ struct Usuario: Codable, Identifiable {
 enum RolUsuario: String, Codable {
     case estudiante
     case empresa
+    case universidad
+    case docente
+    case admin
 }
 
 enum EstadoUsuario: String, Codable {
     case activo
     case inactivo
     case suspendido
+    case pendiente
 }
 
 struct Perfil: Codable, Identifiable {
@@ -169,5 +173,24 @@ struct PerfilEmpresa: Codable {
         case docVerificacion = "doc_verificacion"
         case fechaCreacion = "fecha_creacion"
         case fotoPortada = "foto_portada"
+    }
+}
+
+// MARK: - CV Archivo Model
+struct CVArchivo: Codable {
+    let idCv: Int?
+    let idPerfil: Int
+    let nombre: String
+    let urlCv: String
+    let fechaSubida: Date?
+    let visible: String
+    
+    enum CodingKeys: String, CodingKey {
+        case idCv = "id_cv"
+        case idPerfil = "id_perfil"
+        case nombre
+        case urlCv = "url_cv"
+        case fechaSubida = "fecha_subida"
+        case visible
     }
 }

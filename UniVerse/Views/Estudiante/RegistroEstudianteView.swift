@@ -1,5 +1,29 @@
 // Views/RegistroEstudianteView.swift
 import SwiftUI
+import UIKit
+import PhotosUI
+import UniformTypeIdentifiers
+import Supabase
+
+// Tipos temporales hasta que se resuelva el problema de importación
+struct DocumentInfo: Identifiable {
+    let id = UUID()
+    let name: String
+    let data: Data
+    let size: Int
+    let url: URL
+    
+    var formattedSize: String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useMB, .useKB]
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: Int64(size))
+    }
+    
+    var isValidPDF: Bool {
+        return name.lowercased().hasSuffix(".pdf") && data.count > 0
+    }
+}
 
 struct RegistroEstudianteView: View {
     @EnvironmentObject var authVM: AuthViewModel
@@ -22,6 +46,11 @@ struct RegistroEstudianteView: View {
     @State private var showingAlert = false
     @State private var alertMessage = ""
     @State private var emailValidationMessage = ""
+    
+    // Estados para archivos
+    @State private var selectedProfileImage: UIImage?
+    @State private var selectedDocument: DocumentInfo?
+    @State private var isUploadingFiles = false
     
     var body: some View {
         ZStack {
@@ -508,33 +537,11 @@ struct RegistroEstudianteView: View {
                                     .foregroundColor(.textPrimary)
                                 
                                 VStack(spacing: 12) {
-                                    // Avatar placeholder/preview
-                                    Button(action: {
-                                        // TODO: Implementar selección de foto
-                                    }) {
-                                        ZStack {
-                                            Circle()
-                                                .fill(Color.inputBackground)
-                                                .frame(width: 80, height: 80)
-                                                .overlay(
-                                                    Circle()
-                                                        .stroke(Color.borderColor, lineWidth: 2)
-                                                )
-                                            
-                                            VStack(spacing: 4) {
-                                                Image(systemName: "camera.fill")
-                                                    .font(.system(size: 24))
-                                                    .foregroundColor(.textSecondary)
-                                                
-                                                Text("Foto")
-                                                    .font(.system(size: 10))
-                                                    .foregroundColor(.textSecondary)
-                                            }
-                                        }
-                                    }
+                                    // Usar el nuevo componente ImagePickerOptions
+                                    ImagePickerOptions(selectedImage: $selectedProfileImage)
                                     
                                     Text("Toca para seleccionar una foto de perfil")
-                                        .font(.system(size: 13))
+                                        .font(.system(size: 12))
                                         .foregroundColor(.textSecondary)
                                         .multilineTextAlignment(.center)
                                 }
@@ -546,43 +553,8 @@ struct RegistroEstudianteView: View {
                                     .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(.textPrimary)
                                 
-                                // Drop zone para CV
-                                Button(action: {
-                                    // TODO: Implementar selección de CV
-                                }) {
-                                    VStack(spacing: 12) {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: "doc.fill")
-                                                .font(.system(size: 20))
-                                                .foregroundColor(.textSecondary)
-                                            
-                                            VStack(alignment: .leading, spacing: 2) {
-                                                Text("Arrastra tu CV aquí o haz clic para seleccionar")
-                                                    .font(.system(size: 14))
-                                                    .foregroundColor(.textPrimary)
-                                                    .multilineTextAlignment(.leading)
-                                                
-                                                Text("Formatos soportados: PDF, DOC, DOCX")
-                                                    .font(.system(size: 12))
-                                                    .foregroundColor(.textSecondary)
-                                            }
-                                            
-                                            Spacer()
-                                            
-                                            Image(systemName: "plus.circle")
-                                                .font(.system(size: 20))
-                                                .foregroundColor(.primaryOrange)
-                                        }
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 20)
-                                    }
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.borderColor, style: StrokeStyle(lineWidth: 2, dash: [5]))
-                                            .background(Color.inputBackground.opacity(0.3))
-                                    )
-                                    .cornerRadius(8)
-                                }
+                                // Usar el nuevo componente DocumentPickerButton
+                                DocumentPickerButton(selectedDocument: $selectedDocument)
                             }
                             
                             // Información académica
@@ -705,7 +677,7 @@ struct RegistroEstudianteView: View {
                             // Botón de registro
                             Button(action: handleRegister) {
                                 HStack(spacing: 8) {
-                                    if authVM.isLoading {
+                                    if authVM.isLoading || isUploadingFiles {
                                         ProgressView()
                                             .scaleEffect(0.8)
                                             .tint(.white)
@@ -714,7 +686,7 @@ struct RegistroEstudianteView: View {
                                             .font(.system(size: 16))
                                     }
                                     
-                                    Text(authVM.isLoading ? "Registrando..." : "Crear cuenta")
+                                    Text(getButtonText())
                                         .font(.system(size: 16, weight: .semibold))
                                 }
                                 .foregroundColor(.white)
@@ -725,7 +697,7 @@ struct RegistroEstudianteView: View {
                                 )
                                 .cornerRadius(8)
                             }
-                            .disabled(!isFormValid || authVM.isLoading)
+                            .disabled(!isFormValid || authVM.isLoading || isUploadingFiles)
                             .padding(.top, 8)
                             
                             // Link a login
@@ -800,6 +772,16 @@ struct RegistroEstudianteView: View {
         return password == confirmPassword && !password.isEmpty && !confirmPassword.isEmpty
     }
     
+    private func getButtonText() -> String {
+        if isUploadingFiles {
+            return "Subiendo archivos..."
+        } else if authVM.isLoading {
+            return "Registrando..."
+        } else {
+            return "Crear cuenta"
+        }
+    }
+    
     private var isFormValid: Bool {
         !email.isEmpty &&
         isValidEmail &&
@@ -843,8 +825,36 @@ struct RegistroEstudianteView: View {
         }
         
         Task {
+            isUploadingFiles = true
+            
             do {
-                try await authVM.registrarEstudiante(
+                // Crear usuario primero
+                let authResponse = try await SupabaseManager.shared.client.auth.signUp(
+                    email: email,
+                    password: password
+                )
+                
+                let userId = authResponse.user.id.uuidString
+                var fotoPerfilURL: String? = nil
+                var cvInfo: (url: String, name: String)? = nil
+                
+                // Subir foto de perfil si existe
+                if let profileImage = selectedProfileImage {
+                    print("[DEBUG] Subiendo foto de perfil...")
+                    fotoPerfilURL = try await uploadAvatar(profileImage, userId: userId)
+                    print("[DEBUG] Foto subida: \(fotoPerfilURL ?? "nil")")
+                }
+                
+                // Subir CV si existe
+                if let document = selectedDocument {
+                    print("[DEBUG] Subiendo CV...")
+                    cvInfo = try await uploadPDF(document.data, fileName: document.name, userId: userId)
+                    print("[DEBUG] CV subido: \(cvInfo?.url ?? "nil")")
+                }
+                
+                // Registrar estudiante con los URLs de archivos
+                try await authVM.registrarEstudianteConArchivos(
+                    userId: userId, // Pasar el userId directamente
                     email: email,
                     password: password,
                     nombreCompleto: nombreCompleto,
@@ -854,17 +864,356 @@ struct RegistroEstudianteView: View {
                     ubicacion: ubicacion,
                     pais: paisSeleccionado,
                     nombreComercial: nil,
-                    universidadActual: universidad.isEmpty ? nil : universidad
+                    universidadActual: universidad.isEmpty ? nil : universidad,
+                    fotoPerfilURL: fotoPerfilURL,
+                    cvURL: cvInfo?.url,
+                    cvNombre: cvInfo?.name
                 )
                 
+                isUploadingFiles = false
+                
                 // Registro exitoso -> volver al login
-                // (AuthViewModel publica registrationSuccessMessage que puede ser leída en la pantalla de login)
                 presentationMode.wrappedValue.dismiss()
                 
             } catch {
+                isUploadingFiles = false
+                print("[ERROR] Error en registro: \(error)")
                 alertMessage = error.localizedDescription
                 showingAlert = true
             }
+        }
+    }
+}
+
+// MARK: - Componentes temporales para evitar errores de compilación
+
+// Image Picker Options
+struct ImagePickerOptions: View {
+    @Binding var selectedImage: UIImage?
+    @State private var showingImagePicker = false
+    @State private var showingActionSheet = false
+    
+    var body: some View {
+        Button(action: {
+            showingActionSheet = true
+        }) {
+            if let image = selectedImage {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 100, height: 100)
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle()
+                            .stroke(Color.primaryOrange, lineWidth: 3)
+                    )
+            } else {
+                Circle()
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(width: 100, height: 100)
+                    .overlay(
+                        VStack(spacing: 8) {
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 30))
+                                .foregroundColor(.gray)
+                            
+                            Text("Agregar foto")
+                                .font(.system(size: 12))
+                                .foregroundColor(.gray)
+                        }
+                    )
+            }
+        }
+        .actionSheet(isPresented: $showingActionSheet) {
+            ActionSheet(
+                title: Text("Seleccionar foto de perfil"),
+                buttons: [
+                    .default(Text("Galería")) {
+                        showingImagePicker = true
+                    },
+                    .cancel(Text("Cancelar"))
+                ]
+            )
+        }
+        .sheet(isPresented: $showingImagePicker) {
+            PhotoPicker(selectedImage: $selectedImage)
+        }
+    }
+}
+
+// Photo Picker
+struct PhotoPicker: UIViewControllerRepresentable {
+    @Binding var selectedImage: UIImage?
+    @Environment(\.presentationMode) var presentationMode
+    
+    func makeUIViewController(context: Context) -> PHPickerViewController {
+        var config = PHPickerConfiguration()
+        config.filter = .images
+        config.selectionLimit = 1
+        
+        let picker = PHPickerViewController(configuration: config)
+        picker.delegate = context.coordinator
+        return picker
+    }
+    
+    func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, PHPickerViewControllerDelegate {
+        let parent: PhotoPicker
+        
+        init(_ parent: PhotoPicker) {
+            self.parent = parent
+        }
+        
+        func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+            picker.dismiss(animated: true)
+            
+            guard let provider = results.first?.itemProvider else { return }
+            
+            if provider.canLoadObject(ofClass: UIImage.self) {
+                provider.loadObject(ofClass: UIImage.self) { image, error in
+                    DispatchQueue.main.async {
+                        if let uiImage = image as? UIImage {
+                            self.parent.selectedImage = uiImage
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Document Picker Button
+struct DocumentPickerButton: View {
+    @Binding var selectedDocument: DocumentInfo?
+    @State private var showingDocumentPicker = false
+    
+    var body: some View {
+        Button(action: {
+            showingDocumentPicker = true
+        }) {
+            VStack(spacing: 16) {
+                if let document = selectedDocument {
+                    VStack(spacing: 12) {
+                        Image(systemName: "doc.fill")
+                            .font(.system(size: 40))
+                            .foregroundColor(.primaryOrange)
+                        
+                        VStack(spacing: 4) {
+                            Text(document.name)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.textPrimary)
+                                .lineLimit(2)
+                            
+                            Text(document.formattedSize)
+                                .font(.system(size: 12))
+                                .foregroundColor(.textSecondary)
+                        }
+                        
+                        Text("PDF seleccionado")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.green)
+                    }
+                } else {
+                    VStack(spacing: 12) {
+                        Image(systemName: "doc.badge.plus")
+                            .font(.system(size: 40))
+                            .foregroundColor(.gray)
+                        
+                        Text("Subir CV (PDF)")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.textPrimary)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 20)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(8)
+        }
+        .sheet(isPresented: $showingDocumentPicker) {
+            SimpleDocumentPicker(selectedDocument: $selectedDocument)
+        }
+    }
+}
+
+// Simple Document Picker
+struct SimpleDocumentPicker: UIViewControllerRepresentable {
+    @Binding var selectedDocument: DocumentInfo?
+    @Environment(\.presentationMode) var presentationMode
+    
+    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [UTType.pdf], asCopy: true)
+        picker.delegate = context.coordinator
+        return picker
+    }
+    
+    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, UIDocumentPickerDelegate {
+        let parent: SimpleDocumentPicker
+        
+        init(_ parent: SimpleDocumentPicker) {
+            self.parent = parent
+        }
+        
+        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+            guard let url = urls.first else { return }
+            
+            do {
+                let data = try Data(contentsOf: url)
+                let documentInfo = DocumentInfo(
+                    name: url.lastPathComponent,
+                    data: data,
+                    size: data.count,
+                    url: url
+                )
+                
+                DispatchQueue.main.async {
+                    self.parent.selectedDocument = documentInfo
+                    self.parent.presentationMode.wrappedValue.dismiss()
+                }
+            } catch {
+                print("Error al leer archivo: \(error)")
+            }
+        }
+    }
+}
+
+// MARK: - Storage Functions
+extension RegistroEstudianteView {
+    
+    /// Sube una imagen de avatar y retorna la URL pública
+    private func uploadAvatar(_ image: UIImage, userId: String) async throws -> String {
+        print("[Storage] Subiendo avatar para usuario: \(userId)")
+        
+        // Comprimir y convertir imagen a Data
+        guard let imageData = compressImage(image) else {
+            throw StorageUploadError.imageCompressionFailed
+        }
+        
+        // Generar nombre único del archivo
+        let fileName = "avatar_\(userId)_\(UUID().uuidString).jpg"
+        
+        do {
+            // Subir archivo al bucket 'avatars'
+            try await SupabaseManager.shared.client
+                .storage
+                .from("avatars")
+                .upload(path: fileName, file: imageData)
+            
+            // Obtener URL pública
+            let publicURL = try SupabaseManager.shared.client
+                .storage
+                .from("avatars")
+                .getPublicURL(path: fileName)
+            
+            print("[Storage] Avatar subido exitosamente: \(publicURL)")
+            return publicURL.absoluteString
+            
+        } catch {
+            print("[Storage] Error subiendo avatar: \(error)")
+            throw StorageUploadError.uploadFailed(error.localizedDescription)
+        }
+    }
+    
+    /// Sube un PDF y retorna la URL pública junto con el nombre del archivo
+    private func uploadPDF(_ data: Data, fileName: String, userId: String) async throws -> (url: String, name: String) {
+        print("[Storage] Subiendo PDF para usuario: \(userId)")
+        
+        // Validar que es un PDF
+        guard isPDF(data) else {
+            throw StorageUploadError.invalidPDFFormat
+        }
+        
+        // Generar nombre único del archivo
+        let cleanFileName = fileName.replacingOccurrences(of: " ", with: "_")
+        let uniqueFileName = "cv_\(userId)_\(UUID().uuidString)_\(cleanFileName)"
+        
+        do {
+            // Subir archivo al bucket 'docs'
+            try await SupabaseManager.shared.client
+                .storage
+                .from("docs")
+                .upload(path: uniqueFileName, file: data)
+            
+            // Obtener URL pública
+            let publicURL = try SupabaseManager.shared.client
+                .storage
+                .from("docs")
+                .getPublicURL(path: uniqueFileName)
+            
+            print("[Storage] PDF subido exitosamente: \(publicURL)")
+            return (url: publicURL.absoluteString, name: fileName)
+            
+        } catch {
+            print("[Storage] Error subiendo PDF: \(error)")
+            throw StorageUploadError.uploadFailed(error.localizedDescription)
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    /// Comprime una imagen para optimizar el tamaño
+    private func compressImage(_ image: UIImage) -> Data? {
+        // Redimensionar si es muy grande
+        let maxDimension: CGFloat = 1024
+        var resizedImage = image
+        
+        if max(image.size.width, image.size.height) > maxDimension {
+            let aspectRatio = image.size.width / image.size.height
+            let newSize: CGSize
+            
+            if image.size.width > image.size.height {
+                newSize = CGSize(width: maxDimension, height: maxDimension / aspectRatio)
+            } else {
+                newSize = CGSize(width: maxDimension * aspectRatio, height: maxDimension)
+            }
+            
+            UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
+            image.draw(in: CGRect(origin: .zero, size: newSize))
+            resizedImage = UIGraphicsGetImageFromCurrentImageContext() ?? image
+            UIGraphicsEndImageContext()
+        }
+        
+        // Comprimir JPEG con calidad 0.8
+        return resizedImage.jpegData(compressionQuality: 0.8)
+    }
+    
+    /// Valida si los datos corresponden a un PDF
+    private func isPDF(_ data: Data) -> Bool {
+        guard data.count >= 4 else { return false }
+        
+        // Los PDFs comienzan con %PDF
+        let pdfHeader = Data([0x25, 0x50, 0x44, 0x46]) // %PDF
+        let fileHeader = data.prefix(4)
+        
+        return fileHeader == pdfHeader
+    }
+}
+
+// MARK: - Storage Errors
+enum StorageUploadError: Error, LocalizedError {
+    case imageCompressionFailed
+    case invalidPDFFormat
+    case uploadFailed(String)
+    
+    var errorDescription: String? {
+        switch self {
+        case .imageCompressionFailed:
+            return "No se pudo comprimir la imagen"
+        case .invalidPDFFormat:
+            return "El archivo no es un PDF válido"
+        case .uploadFailed(let message):
+            return "Error al subir archivo: \(message)"
         }
     }
 }

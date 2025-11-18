@@ -48,6 +48,51 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	
+	<!-- Permisos para acceso a la galería de fotos -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>UniVerse necesita acceso a tu galería de fotos para que puedas seleccionar y subir tu foto de perfil.</string>
+	
+	<!-- Permisos para acceso a la galería de fotos (agregar) -->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>UniVerse puede guardar fotos en tu galería si lo deseas.</string>
+	
+	<!-- Permisos para acceso a la cámara -->
+	<key>NSCameraUsageDescription</key>
+	<string>UniVerse necesita acceso a tu cámara para que puedas tomar fotos para tu perfil.</string>
+	
+	<!-- Permisos para acceso a documentos -->
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>UniVerse necesita acceso a tus documentos para que puedas subir tu CV en formato PDF.</string>
+	
+	<!-- Tipos de documentos soportados -->
+	<key>UTImportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+				<string>public.content</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>PDF Document</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.adobe.pdf</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>pdf</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>application/pdf</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+	
+	<!-- Configuración de Supabase -->
 	<key>SUPABASE_URL</key>
 	<string>$(SUPABASE_URL)</string>
 	<key>SUPABASE_ANON_KEY</key>

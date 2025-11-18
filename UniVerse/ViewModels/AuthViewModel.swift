@@ -111,7 +111,7 @@ class AuthViewModel: ObservableObject {
             print("[DEBUG] Consultando tabla perfil...")
             let perfilResponse: [Perfil] = try await supabase
                 .from("perfil")
-                .select("id_perfil, id_usuario, nombre_completo, foto_perfil, biografia, ubicacion, telefono, sitio_web, pais")  // AGREGADO pais
+                .select("id_perfil, id_usuario, nombre_completo, foto_perfil, biografia, ubicacion, telefono, sitio_web, pais")
                 .eq("id_usuario", value: userId.uuidString)
                 .execute()
                 .value
@@ -138,6 +138,10 @@ class AuthViewModel: ObservableObject {
                         .value
                     
                     perfil.perfilEmpresa = empresaResponse.first
+                    
+                } else if usuario.rol == .universidad || usuario.rol == .docente || usuario.rol == .admin {
+                    // Estos roles no necesitan datos específicos ya que no pueden acceder
+                    print("Usuario con rol restringido detectado: \(usuario.rol)")
                 }
                 
                 usuario.perfil = perfil
@@ -219,6 +223,113 @@ class AuthViewModel: ObservableObject {
             
         } catch {
             self.isLoading = false
+            throw error
+        }
+    }
+    
+    // REGISTRO ESTUDIANTE CON ARCHIVOS
+    func registrarEstudianteConArchivos(
+        userId: String,
+        email: String,
+        password: String,
+        nombreCompleto: String,
+        carrera: String,
+        telefono: String,
+        biografia: String,
+        ubicacion: String,
+        pais: String,
+        nombreComercial: String?,
+        universidadActual: String?,
+        fotoPerfilURL: String?,
+        cvURL: String?,
+        cvNombre: String?
+    ) async throws {
+        
+        print("[DEBUG] Registrando estudiante con archivos...")
+        print("[DEBUG] Foto URL: \(fotoPerfilURL ?? "nil")")
+        print("[DEBUG] CV URL: \(cvURL ?? "nil")")
+        
+        isLoading = true
+        errorMessage = nil
+        registrationSuccessMessage = nil
+        
+        do {
+            // Usar el userId pasado como parámetro
+            guard let userUUID = UUID(uuidString: userId) else {
+                throw AuthError.registrationFailed("ID de usuario inválido")
+            }
+            
+            // Llamar function de Supabase con URLs de archivos
+            let datos = RegistroEstudianteRequest(
+                pIdUsuario: userUUID,
+                pNombreCompleto: nombreCompleto,
+                pBiografia: biografia,
+                pUbicacion: ubicacion,
+                pTelefono: telefono,
+                pNombreComercial: nombreComercial ?? "",
+                pCarrera: carrera,
+                pUniversidadActual: universidadActual,
+                pFotoPerfil: fotoPerfilURL,
+                pSitioWeb: nil,
+                pPais: pais
+            )
+            
+            let response: RegistroResponse = try await supabase
+                .rpc("registrar_estudiante", params: datos)
+                .execute()
+                .value
+            
+            if response.success {
+                // Si hay CV, insertar en la tabla CV_archivo
+                if let cvURL = cvURL, let cvNombre = cvNombre {
+                    print("[DEBUG] Insertando CV en base de datos...")
+                    
+                    // Primero obtener el id_perfil del perfil recién creado
+                    let perfilResponse: [Perfil] = try await supabase
+                        .from("perfil")
+                        .select("id_perfil")
+                        .eq("id_usuario", value: userId)
+                        .execute()
+                        .value
+                    
+                    if let perfil = perfilResponse.first {
+                        // Crear estructura para insertar CV
+                        struct CVInsert: Codable {
+                            let id_perfil: Int
+                            let nombre: String
+                            let url_cv: String
+                            let visible: String
+                        }
+                        
+                        let cvInsert = CVInsert(
+                            id_perfil: perfil.id,
+                            nombre: cvNombre,
+                            url_cv: cvURL,
+                            visible: "si"
+                        )
+                        
+                        let _: [CVArchivo] = try await supabase
+                            .from("cv_archivo")
+                            .insert(cvInsert)
+                            .execute()
+                            .value
+                        
+                        print("[DEBUG] CV insertado exitosamente")
+                    }
+                }
+                
+                self.registrationSuccessMessage = "Registro exitoso. Por favor, inicia sesión."
+                self.isAuthenticated = false
+                self.initialView = .auth
+            } else {
+                throw AuthError.perfilNoCreado
+            }
+            
+            self.isLoading = false
+            
+        } catch {
+            self.isLoading = false
+            print("[ERROR] Error en registro con archivos: \(error)")
             throw error
         }
     }
@@ -375,6 +486,7 @@ enum AuthError: LocalizedError {
     case usuarioNoEncontrado
     case usuarioInactivo
     case perfilNoEncontrado
+    case registrationFailed(String)
     
     var errorDescription: String? {
         switch self {
@@ -388,6 +500,8 @@ enum AuthError: LocalizedError {
             return "Tu cuenta está inactiva. Contacta al administrador para más información."
         case .perfilNoEncontrado:
             return "No se encontró el perfil del usuario. Contacta al soporte técnico."
+        case .registrationFailed(let message):
+            return "Error en el registro: \(message)"
         }
     }
 }
