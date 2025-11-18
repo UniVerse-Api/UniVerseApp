@@ -13,7 +13,7 @@ struct Usuario: Codable, Identifiable {
         case rol
         case estado
         case fechaCreacion = "fecha_creacion"
-        case perfil = "Perfil"
+        case perfil = "perfil"
     }
     
     // Decodificador personalizado para manejar perfil como array o objeto
@@ -82,8 +82,8 @@ struct Perfil: Codable, Identifiable {
         case telefono
         case sitioWeb = "sitio_web"
         case pais  // NUEVO CAMPO
-        case perfilEstudiante = "Perfil_estudiante"
-        case perfilEmpresa = "Perfil_empresa"
+        case perfilEstudiante = "perfil_estudiante"
+        case perfilEmpresa = "perfil_empresa"
     }
     
     // Decodificador personalizado para manejar subobjetos que pueden venir como arrays
@@ -154,12 +154,20 @@ struct PerfilEstudiante: Codable {
 
 struct PerfilEmpresa: Codable {
     let idPerfil: Int
-    let nombreEmpresa: String
+    let nombreComercial: String
+    let anioFundacion: Int
+    let totalEmpleados: Int
+    let docVerificacion: String
     let fechaCreacion: Date
+    let fotoPortada: String?
     
     enum CodingKeys: String, CodingKey {
         case idPerfil = "id_perfil"
-        case nombreEmpresa = "nombre_empresa"
+        case nombreComercial = "nombre_comercial"
+        case anioFundacion = "anio_fundacion"
+        case totalEmpleados = "total_empleados"
+        case docVerificacion = "doc_verificacion"
         case fechaCreacion = "fecha_creacion"
+        case fotoPortada = "foto_portada"
     }
 }

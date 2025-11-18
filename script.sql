@@ -46,6 +46,12 @@ CREATE TABLE Perfil (
     sitio_web VARCHAR(500)
 );
 
+ALTER TABLE Perfil
+ADD COLUMN pais VARCHAR(80) NOT NULL DEFAULT 'El Salvador';
+
+ALTER TABLE Perfil
+ALTER COLUMN pais DROP DEFAULT;
+
 -- Tabla Perfil_empresa
 CREATE TABLE Perfil_empresa (
     id_perfil INTEGER PRIMARY KEY REFERENCES Perfil(id_perfil) ON DELETE CASCADE,
@@ -80,7 +86,6 @@ CREATE TABLE Perfil_estudiante (
 
 ALTER TABLE Perfil_estudiante
 ALTER COLUMN nombre_comercial DROP NOT NULL;
-
 
 -- Tabla Experiencia
 CREATE TABLE Experiencia (

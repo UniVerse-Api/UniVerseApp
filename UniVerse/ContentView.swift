@@ -14,6 +14,8 @@ struct ContentView: View {
                         AuthView()
                     case .feed:
                         FeedView()
+                    case .studentDashboard:
+                        NavbarEstudianteView()
                     }
                 }
             }

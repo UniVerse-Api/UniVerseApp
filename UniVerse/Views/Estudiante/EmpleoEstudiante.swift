@@ -258,7 +258,7 @@ struct EmpleosEstudianteView: View {
     
     var body: some View {
         ZStack {
-            Color.backgroundDark.ignoresSafeArea()
+            Color.backgroundLight.ignoresSafeArea()
             
             VStack(spacing: 0) {
                 // MARK: - Header
@@ -307,7 +307,7 @@ struct EmpleosEstudianteView: View {
                     .padding(.top, 16)
                     .padding(.bottom, 100)
                 }
-                .background(Color(red: 15/255, green: 23/255, blue: 42/255).opacity(0.3))
+                .background(Color.backgroundLight.opacity(0.3))
             }
         }
         .navigationBarHidden(true)
@@ -318,7 +318,7 @@ struct EmpleosEstudianteView: View {
         VStack(spacing: 0) {
             Text("Empleos")
                 .font(.system(size: 24, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(.textPrimary)
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 16)
@@ -327,7 +327,7 @@ struct EmpleosEstudianteView: View {
                 .fill(Color.borderColor)
                 .frame(height: 1)
         }
-        .background(Color.backgroundDark.opacity(0.8))
+        .background(Color.backgroundLight.opacity(0.95))
         .backdrop()
     }
     
@@ -341,11 +341,11 @@ struct EmpleosEstudianteView: View {
                 
                 TextField("Buscar empleos, empresas o ubicación...", text: $searchText)
                     .font(.system(size: 14))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(Color(red: 30/255, green: 30/255, blue: 30/255))
+            .background(Color.inputBackground)
             .cornerRadius(8)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
@@ -384,7 +384,7 @@ struct EmpleosEstudianteView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 16)
-        .background(Color.backgroundDark)
+        .background(Color.backgroundLight)
         .overlay(
             Rectangle()
                 .fill(Color.borderColor)
@@ -423,7 +423,7 @@ struct JobFilterButton: View {
             .foregroundColor(isSelected ? .black : .textSecondary)
             .padding(.horizontal, 16)
             .padding(.vertical, 6)
-            .background(isSelected ? Color.primaryOrange : Color(red: 30/255, green: 30/255, blue: 30/255))
+            .background(isSelected ? Color.primaryOrange : Color.inputBackground)
             .cornerRadius(20)
         }
     }
@@ -454,7 +454,7 @@ struct FeaturedJobCard: View {
                 // Logo
                 ZStack {
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.white)
+                        .fill(Color.cardBackground)
                         .frame(width: 64, height: 64)
                     
                     Image(systemName: job.logoUrl ?? "building.2.fill")
@@ -466,7 +466,7 @@ struct FeaturedJobCard: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(job.title)
                         .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                     
                     HStack(spacing: 6) {
                         Text(job.company)
@@ -582,7 +582,7 @@ struct JobCard: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(job.title)
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                     
                     Text(job.company)
                         .font(.system(size: 12, weight: .medium))
@@ -679,7 +679,7 @@ struct ApplicationCard: View {
                             .frame(width: 48, height: 48)
                     } else {
                         RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.white)
+                            .fill(Color.cardBackground)
                             .frame(width: 48, height: 48)
                     }
                     
@@ -698,7 +698,7 @@ struct ApplicationCard: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(application.job.title)
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                     
                     Text(application.job.company)
                         .font(.system(size: 12, weight: .medium))
@@ -810,5 +810,5 @@ struct JobLoadingSkeleton: View {
     NavigationView {
         EmpleosEstudianteView()
     }
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }

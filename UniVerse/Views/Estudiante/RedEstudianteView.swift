@@ -25,7 +25,7 @@ struct Profile: Identifiable {
     var isFollowing: Bool
 }
 
-struct DescubrirPerfilesView: View {
+struct RedEstudianteView: View {
     @State private var searchText = ""
     @State private var selectedFilter: ProfileFilter = .todos
     @State private var profiles = [
@@ -70,7 +70,7 @@ struct DescubrirPerfilesView: View {
     
     var body: some View {
         ZStack {
-            Color.backgroundDark.ignoresSafeArea()
+            Color.backgroundLight.ignoresSafeArea()
             
             VStack(spacing: 0) {
                 // MARK: - Header
@@ -100,7 +100,7 @@ struct DescubrirPerfilesView: View {
                     .padding(.top, 16)
                     .padding(.bottom, 100)
                 }
-                .background(Color(red: 15/255, green: 23/255, blue: 42/255).opacity(0.3))
+                .background(Color.backgroundLight.opacity(0.3))
             }
         }
         .navigationBarHidden(true)
@@ -116,7 +116,7 @@ struct DescubrirPerfilesView: View {
         VStack(spacing: 0) {
             Text("Descubrir")
                 .font(.system(size: 24, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(.textPrimary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
             
@@ -124,7 +124,7 @@ struct DescubrirPerfilesView: View {
                 .fill(Color.borderColor)
                 .frame(height: 1)
         }
-        .background(Color.backgroundDark.opacity(0.8))
+        .background(Color.backgroundLight.opacity(0.95))
         .backdrop()
     }
     
@@ -138,11 +138,11 @@ struct DescubrirPerfilesView: View {
                 
                 TextField("Buscar por nombre, habilidad o universidad...", text: $searchText)
                     .font(.system(size: 14))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(Color(red: 30/255, green: 30/255, blue: 30/255))
+            .background(Color.inputBackground)
             .cornerRadius(8)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
@@ -171,14 +171,14 @@ struct DescubrirPerfilesView: View {
                         .font(.system(size: 16))
                         .foregroundColor(.textSecondary)
                         .frame(width: 40, height: 40)
-                        .background(Color(red: 30/255, green: 30/255, blue: 30/255))
+                        .background(Color.inputBackground)
                         .cornerRadius(8)
                 }
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 16)
-        .background(Color.backgroundDark)
+        .background(Color.backgroundLight)
     }
 }
 
@@ -195,7 +195,7 @@ struct FilterButtonRedEstudiante: View {
                 .foregroundColor(isSelected ? .black : .textSecondary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 6)
-                .background(isSelected ? Color.primaryOrange : Color(red: 30/255, green: 30/255, blue: 30/255))
+                .background(isSelected ? Color.primaryOrange : Color.inputBackground)
                 .cornerRadius(20)
         }
     }
@@ -225,7 +225,7 @@ struct ProfileCard: View {
                 HStack(spacing: 6) {
                     Text(profile.name)
                         .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                     
                     if case .company(let isVerified) = profile.type, isVerified {
                         Image(systemName: "checkmark.seal.fill")
@@ -312,7 +312,7 @@ struct ProfileCard: View {
                 .font(.system(size: 28))
                 .foregroundColor(.blue)
                 .frame(width: 64, height: 64)
-                .background(Color.white)
+                .background(Color.cardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             
         case .university:
@@ -320,7 +320,7 @@ struct ProfileCard: View {
                 .font(.system(size: 28))
                 .foregroundColor(.indigo)
                 .frame(width: 64, height: 64)
-                .background(Color.white)
+                .background(Color.cardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             
         case .professor:
@@ -428,7 +428,7 @@ struct LoadingProfileSkeleton: View {
 // MARK: - Preview
 #Preview {
     NavigationView {
-        DescubrirPerfilesView()
+        RedEstudianteView()
     }
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }
