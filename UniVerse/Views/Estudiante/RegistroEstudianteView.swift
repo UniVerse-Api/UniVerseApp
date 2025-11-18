@@ -25,8 +25,8 @@ struct RegistroEstudianteView: View {
     
     var body: some View {
         ZStack {
-            // Fondo oscuro
-            Color.backgroundDark
+            // Fondo claro
+            Color.backgroundLight
                 .ignoresSafeArea()
             
             ScrollView {
@@ -56,7 +56,7 @@ struct RegistroEstudianteView: View {
                         VStack(spacing: 8) {
                             Text("Registro")
                                 .font(.system(size: 28, weight: .bold))
-                                .foregroundColor(.white)
+                                .foregroundColor(.textPrimary)
                             
                             Text("Estudiante")
                                 .font(.system(size: 20, weight: .semibold))
@@ -76,7 +76,7 @@ struct RegistroEstudianteView: View {
                             VStack(alignment: .leading, spacing: 16) {
                                 Text("Datos de cuenta")
                                     .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.textPrimary)
                                 
                                 // Email
                                 VStack(alignment: .leading, spacing: 6) {
@@ -91,7 +91,7 @@ struct RegistroEstudianteView: View {
                                             .frame(width: 20)
                                         
                                         TextField("tu@correo.com", text: $email)
-                                            .foregroundColor(.white)
+                                            .foregroundColor(.textPrimary)
                                             .textInputAutocapitalization(.never)
                                             .keyboardType(.emailAddress)
                                             .tint(.primaryOrange)
@@ -162,11 +162,11 @@ struct RegistroEstudianteView: View {
                                         
                                         if showPassword {
                                             TextField("Mínimo 6 caracteres", text: $password)
-                                                .foregroundColor(.white)
+                                                .foregroundColor(.textPrimary)
                                                 .tint(.primaryOrange)
                                         } else {
                                             SecureField("Mínimo 6 caracteres", text: $password)
-                                                .foregroundColor(.white)
+                                                .foregroundColor(.textPrimary)
                                                 .tint(.primaryOrange)
                                         }
                                         
@@ -245,11 +245,11 @@ struct RegistroEstudianteView: View {
                                         
                                         if showConfirmPassword {
                                             TextField("Repite tu contraseña", text: $confirmPassword)
-                                                .foregroundColor(.white)
+                                                .foregroundColor(.textPrimary)
                                                 .tint(.primaryOrange)
                                         } else {
                                             SecureField("Repite tu contraseña", text: $confirmPassword)
-                                                .foregroundColor(.white)
+                                                .foregroundColor(.textPrimary)
                                                 .tint(.primaryOrange)
                                         }
                                         
@@ -294,7 +294,7 @@ struct RegistroEstudianteView: View {
                             VStack(alignment: .leading, spacing: 16) {
                                 Text("Información personal")
                                     .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.textPrimary)
                                 
                                 // Nombre completo
                                 VStack(alignment: .leading, spacing: 6) {
@@ -309,7 +309,7 @@ struct RegistroEstudianteView: View {
                                             .frame(width: 20)
                                         
                                         TextField("Tu nombre completo", text: $nombreCompleto)
-                                            .foregroundColor(.white)
+                                            .foregroundColor(.textPrimary)
                                             .tint(.primaryOrange)
                                     }
                                     .padding(.horizontal, 16)
@@ -335,7 +335,7 @@ struct RegistroEstudianteView: View {
                                             .frame(width: 20)
                                         
                                         TextField("+1 234 567 8900", text: $telefono)
-                                            .foregroundColor(.white)
+                                            .foregroundColor(.textPrimary)
                                             .keyboardType(.phonePad)
                                             .tint(.primaryOrange)
                                     }
@@ -368,7 +368,7 @@ struct RegistroEstudianteView: View {
                                                     .frame(width: 20)
                                                 
                                                 Text(paisSeleccionado.isEmpty ? "Selecciona tu país" : paisSeleccionado)
-                                                    .foregroundColor(paisSeleccionado.isEmpty ? .textSecondary : .white)
+                                                    .foregroundColor(paisSeleccionado.isEmpty ? .textSecondary : .textPrimary)
                                                     .font(.system(size: 16))
                                                 
                                                 Spacer()
@@ -405,7 +405,7 @@ struct RegistroEstudianteView: View {
                                                                 HStack {
                                                                     Text(pais)
                                                                         .font(.system(size: 16))
-                                                                        .foregroundColor(.white)
+                                                                        .foregroundColor(.textPrimary)
                                                                     
                                                                     Spacer()
                                                                     
@@ -457,7 +457,7 @@ struct RegistroEstudianteView: View {
                                             .frame(width: 20)
                                         
                                         TextField("Ciudad, País", text: $ubicacion)
-                                            .foregroundColor(.white)
+                                            .foregroundColor(.textPrimary)
                                             .tint(.primaryOrange)
                                     }
                                     .padding(.horizontal, 16)
@@ -485,7 +485,7 @@ struct RegistroEstudianteView: View {
                                                 .padding(.top, 2)
                                             
                                             TextField("Cuéntanos sobre ti, tus intereses y objetivos profesionales...", text: $biografia, axis: .vertical)
-                                                .foregroundColor(.white)
+                                                .foregroundColor(.textPrimary)
                                                 .tint(.primaryOrange)
                                                 .lineLimit(4...8)
                                         }
@@ -505,7 +505,7 @@ struct RegistroEstudianteView: View {
                             VStack(alignment: .leading, spacing: 16) {
                                 Text("Foto de perfil")
                                     .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.textPrimary)
                                 
                                 VStack(spacing: 12) {
                                     // Avatar placeholder/preview
@@ -544,7 +544,7 @@ struct RegistroEstudianteView: View {
                             VStack(alignment: .leading, spacing: 16) {
                                 Text("Currículum (opcional)")
                                     .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.textPrimary)
                                 
                                 // Drop zone para CV
                                 Button(action: {
@@ -559,7 +559,7 @@ struct RegistroEstudianteView: View {
                                             VStack(alignment: .leading, spacing: 2) {
                                                 Text("Arrastra tu CV aquí o haz clic para seleccionar")
                                                     .font(.system(size: 14))
-                                                    .foregroundColor(.white)
+                                                    .foregroundColor(.textPrimary)
                                                     .multilineTextAlignment(.leading)
                                                 
                                                 Text("Formatos soportados: PDF, DOC, DOCX")
@@ -589,7 +589,7 @@ struct RegistroEstudianteView: View {
                             VStack(alignment: .leading, spacing: 16) {
                                 Text("Información académica")
                                     .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.textPrimary)
                                 
                                 // Carrera
                                 VStack(alignment: .leading, spacing: 6) {
@@ -604,7 +604,7 @@ struct RegistroEstudianteView: View {
                                             .frame(width: 20)
                                         
                                         TextField("Ingeniería en Sistemas, Diseño Gráfico, etc.", text: $carrera)
-                                            .foregroundColor(.white)
+                                            .foregroundColor(.textPrimary)
                                             .tint(.primaryOrange)
                                     }
                                     .padding(.horizontal, 16)
@@ -630,7 +630,7 @@ struct RegistroEstudianteView: View {
                                             .frame(width: 20)
                                         
                                         TextField("Nombre de tu universidad", text: $universidad)
-                                            .foregroundColor(.white)
+                                            .foregroundColor(.textPrimary)
                                             .tint(.primaryOrange)
                                     }
                                     .padding(.horizontal, 16)

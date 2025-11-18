@@ -29,11 +29,12 @@ extension Color {
     
     // Colores del tema de la app
     static let primaryOrange = Color(hex: "FF8C00")
-    static let textSecondary = Color(hex: "9CA3AF")
+    static let textSecondary = Color(hex: "6B7280")
+    static let backgroundLight = Color(hex: "F9FAFB")
+    static let cardBackground = Color.white
+    static let inputBackground = Color(hex: "F9FAFB")
+    static let borderColor = Color(hex: "E5E7EB")
     static let backgroundDark = Color(hex: "0D1117")
-    static let cardBackground = Color(hex: "161B22")
-    static let inputBackground = Color(hex: "0D1117")
-    static let borderColor = Color(hex: "30363D")
-    static let backgroundLight = Color(hex: "F5F6F8")
+    static let textPrimary = Color(hex: "1F2937")
 
 }

@@ -1,4 +1,4 @@
-let ubicacionesElSalvador = [
+let ElSalvador = [
     "Santa Ana, El Salvador",
     "San Salvador, El Salvador",
     "Sonsonate, El Salvador",
@@ -15,7 +15,7 @@ let ubicacionesElSalvador = [
     "Morazán, El Salvador"
 ]
 
-let ubicacionesMexico = [
+let Mexico = [
     "Ciudad de México, México",
     "Jalisco, México",
     "Nuevo León, México",
@@ -38,7 +38,7 @@ let ubicacionesMexico = [
     "Guerrero, México"
 ]
 
-let ubicacionesGuatemala = [
+let Guatemala = [
     "Ciudad de Guatemala, Guatemala",
     "Antigua Guatemala, Guatemala",
     "Quetzaltenango, Guatemala",
@@ -56,7 +56,7 @@ let ubicacionesGuatemala = [
     "Sololá, Guatemala"
 ]
 
-let ubicacionesHonduras = [
+let Honduras = [
     "Tegucigalpa, Honduras",
     "San Pedro Sula, Honduras",
     "La Ceiba, Honduras",
@@ -73,7 +73,7 @@ let ubicacionesHonduras = [
     "Gracias, Honduras"
 ]
 
-let ubicacionesNicaragua = [
+let Nicaragua = [
     "Managua, Nicaragua",
     "Granada, Nicaragua",
     "León, Nicaragua",
@@ -89,7 +89,7 @@ let ubicacionesNicaragua = [
     "Juigalpa, Nicaragua"
 ]
 
-let ubicacionesCostaRica = [
+let CostaRica = [
     "San José, Costa Rica",
     "Alajuela, Costa Rica",
     "Cartago, Costa Rica",
@@ -103,7 +103,7 @@ let ubicacionesCostaRica = [
     "La Fortuna, Costa Rica"
 ]
 
-let ubicacionesPanama = [
+let Panama = [
     "Ciudad de Panamá, Panamá",
     "Colón, Panamá",
     "David, Panamá",
@@ -116,7 +116,7 @@ let ubicacionesPanama = [
     "Boquete, Panamá"
 ]
 
-let ubicacionesColombia = [
+let Colombia = [
     "Bogotá, Colombia",
     "Medellín, Colombia",
     "Cali, Colombia",
@@ -132,7 +132,7 @@ let ubicacionesColombia = [
     "Neiva, Colombia"
 ]
 
-let ubicacionesArgentina = [
+let Argentina = [
     "Buenos Aires, Argentina",
     "Córdoba, Argentina",
     "Rosario, Argentina",
@@ -146,7 +146,7 @@ let ubicacionesArgentina = [
     "Neuquén, Argentina"
 ]
 
-let ubicacionesChile = [
+let Chile = [
     "Santiago, Chile",
     "Valparaíso, Chile",
     "Concepción, Chile",
@@ -159,7 +159,7 @@ let ubicacionesChile = [
     "Arica, Chile"
 ]
 
-let ubicacionesPeru = [
+let Peru = [
     "Lima, Perú",
     "Arequipa, Perú",
     "Trujillo, Perú",
@@ -172,7 +172,7 @@ let ubicacionesPeru = [
     "Puno, Perú"
 ]
 
-let ubicacionesEcuador = [
+let Ecuador = [
     "Quito, Ecuador",
     "Guayaquil, Ecuador",
     "Cuenca, Ecuador",
@@ -185,7 +185,7 @@ let ubicacionesEcuador = [
     "Esmeraldas, Ecuador"
 ]
 
-let ubicacionesUsa = [
+let Usa = [
     "New York, USA",
     "Los Angeles, USA",
     "Chicago, USA",

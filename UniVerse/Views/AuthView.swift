@@ -10,8 +10,8 @@ struct AuthView: View {
     
     var body: some View {
         ZStack {
-            // Fondo oscuro
-            Color.backgroundDark
+            // Fondo claro
+            Color.backgroundLight
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -23,7 +23,7 @@ struct AuthView: View {
                     VStack(spacing: 4) {
                         Text("Accede")
                             .font(.system(size: 28, weight: .semibold))
-                            .foregroundColor(.white)
+                            .foregroundColor(.textPrimary)
                         
                         Text("Inicia sesión en tu cuenta")
                             .font(.system(size: 13))
@@ -46,7 +46,7 @@ struct AuthView: View {
                                     .frame(width: 20)
                                 
                                 TextField("", text: $email)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.textPrimary)
                                     .textInputAutocapitalization(.never)
                                     .keyboardType(.emailAddress)
                                     .tint(.primaryOrange)
@@ -93,7 +93,7 @@ struct AuthView: View {
                                 
                                 if showPassword {
                                     TextField("", text: $password)
-                                        .foregroundColor(.white)
+                                        .foregroundColor(.textPrimary)
                                         .tint(.primaryOrange)
                                         .onChange(of: password) { _ in
                                             // Limpiar error cuando el usuario empiece a escribir
@@ -103,7 +103,7 @@ struct AuthView: View {
                                         }
                                 } else {
                                     SecureField("", text: $password)
-                                        .foregroundColor(.white)
+                                        .foregroundColor(.textPrimary)
                                         .tint(.primaryOrange)
                                         .onChange(of: password) { _ in
                                             // Limpiar error cuando el usuario empiece a escribir
@@ -143,7 +143,7 @@ struct AuthView: View {
                                     
                                     Text("Recordarme")
                                         .font(.system(size: 13))
-                                        .foregroundColor(.white)
+                                        .foregroundColor(.textPrimary)
                                 }
                             }
                             
