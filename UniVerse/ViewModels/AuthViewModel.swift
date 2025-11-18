@@ -339,15 +339,19 @@ class AuthViewModel: ObservableObject {
         email: String,
         password: String,
         nombreCompleto: String,
-        nombreEmpresa: String,
+        nombreComercial: String,
+        anioFundacion: Int,
+        totalEmpleados: Int,
         telefono: String,
         biografia: String,
         ubicacion: String,
+        pais: String,
         sitioWeb: String?
     ) async throws {
         
         isLoading = true
         errorMessage = nil
+        registrationSuccessMessage = nil
         
         do {
             let authResponse = try await supabase.auth.signUp(
@@ -357,16 +361,21 @@ class AuthViewModel: ObservableObject {
             
             let userId = authResponse.user.id
             
-            // Aquí llamarías a tu function registrar_empresa
+            // Llamar function de Supabase con URL de documento por defecto
             let datos = RegistroEmpresaRequest(
                 pIdUsuario: userId,
                 pNombreCompleto: nombreCompleto,
-                pNombreEmpresa: nombreEmpresa,
+                pFotoPerfil: nil,
                 pBiografia: biografia,
                 pUbicacion: ubicacion,
                 pTelefono: telefono,
                 pSitioWeb: sitioWeb,
-                pFotoPerfil: nil
+                pPais: pais,
+                pNombreComercial: nombreComercial,
+                pAnioFundacion: anioFundacion,
+                pTotalEmpleados: totalEmpleados,
+                pDocVerificacion: "https://wumxykswnczteghktnql.supabase.co/storage/v1/object/public/docs_empresa/pdf_prueba.pdf",
+                pFotoPortada: nil
             )
             
             let response: RegistroResponse = try await supabase
@@ -375,9 +384,9 @@ class AuthViewModel: ObservableObject {
                 .value
             
             if response.success {
-                await loadUserData(userId: userId)
-                self.isAuthenticated = true
-                self.initialView = .feed
+                self.registrationSuccessMessage = "Registro exitoso. Por favor, inicia sesión."
+                self.isAuthenticated = false
+                self.initialView = .auth
             } else {
                 throw AuthError.perfilNoCreado
             }
@@ -386,6 +395,80 @@ class AuthViewModel: ObservableObject {
             
         } catch {
             self.isLoading = false
+            throw error
+        }
+    }
+    
+    // REGISTRO EMPRESA CON ARCHIVOS
+    func registrarEmpresaConArchivos(
+        userId: String,
+        email: String,
+        password: String,
+        nombreCompleto: String,
+        nombreComercial: String,
+        anioFundacion: Int,
+        totalEmpleados: Int,
+        telefono: String,
+        biografia: String,
+        ubicacion: String,
+        pais: String,
+        sitioWeb: String?,
+        fotoPerfilURL: String?,
+        docVerificacionURL: String?
+    ) async throws {
+        
+        print("[DEBUG] Registrando empresa con archivos...")
+        print("[DEBUG] Foto URL: \(fotoPerfilURL ?? "nil")")
+        print("[DEBUG] Documento URL: \(docVerificacionURL ?? "nil")")
+        
+        isLoading = true
+        errorMessage = nil
+        registrationSuccessMessage = nil
+        
+        do {
+            // Usar el userId pasado como parámetro
+            guard let userUUID = UUID(uuidString: userId) else {
+                throw AuthError.registrationFailed("ID de usuario inválido")
+            }
+            
+            // Usar URL de documento proporcionada o la por defecto
+            let documentoURL = docVerificacionURL ?? "https://wumxykswnczteghktnql.supabase.co/storage/v1/object/public/docs_empresa/pdf_prueba.pdf"
+            
+            // Llamar function de Supabase con URLs de archivos
+            let datos = RegistroEmpresaRequest(
+                pIdUsuario: userUUID,
+                pNombreCompleto: nombreCompleto,
+                pFotoPerfil: fotoPerfilURL,
+                pBiografia: biografia,
+                pUbicacion: ubicacion,
+                pTelefono: telefono,
+                pSitioWeb: sitioWeb,
+                pPais: pais,
+                pNombreComercial: nombreComercial,
+                pAnioFundacion: anioFundacion,
+                pTotalEmpleados: totalEmpleados,
+                pDocVerificacion: documentoURL,
+                pFotoPortada: nil
+            )
+            
+            let response: RegistroResponse = try await supabase
+                .rpc("registrar_empresa", params: datos)
+                .execute()
+                .value
+            
+            if response.success {
+                self.registrationSuccessMessage = "Registro exitoso. Empresa pendiente de verificación."
+                self.isAuthenticated = false
+                self.initialView = .auth
+            } else {
+                throw AuthError.perfilNoCreado
+            }
+            
+            self.isLoading = false
+            
+        } catch {
+            self.isLoading = false
+            print("[ERROR] Error en registro de empresa con archivos: \(error)")
             throw error
         }
     }

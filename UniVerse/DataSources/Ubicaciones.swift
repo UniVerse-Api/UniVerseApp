@@ -197,3 +197,6 @@ let Usa = [
     "Atlanta, USA",
     "Denver, USA"
 ]
+
+// Array unificado de todas las ubicaciones
+let Ubicaciones = ElSalvador + Mexico + Guatemala + Honduras + Nicaragua + CostaRica + Panama + Colombia + Argentina + Chile + Peru + Ecuador + Usa

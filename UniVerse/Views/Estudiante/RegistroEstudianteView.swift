@@ -40,6 +40,10 @@ struct RegistroEstudianteView: View {
     @State private var universidad = ""
     @State private var paisSeleccionado = ""
     @State private var showPaisesDropdown = false
+    @State private var ubicacionSeleccionada = ""
+    @State private var showUbicacionesDropdown = false
+    @State private var carreraSeleccionada = ""
+    @State private var showCarrerasDropdown = false
     @State private var acceptTerms = false
     @State private var showPassword = false
     @State private var showConfirmPassword = false
@@ -479,24 +483,93 @@ struct RegistroEstudianteView: View {
                                         .font(.system(size: 14))
                                         .foregroundColor(.textSecondary)
                                     
-                                    HStack(spacing: 12) {
-                                        Image(systemName: "location.fill")
-                                            .foregroundColor(.textSecondary)
-                                            .font(.system(size: 16))
-                                            .frame(width: 20)
+                                    VStack(spacing: 0) {
+                                        Button(action: {
+                                            withAnimation(.easeInOut(duration: 0.2)) {
+                                                showUbicacionesDropdown.toggle()
+                                            }
+                                        }) {
+                                            HStack(spacing: 12) {
+                                                Image(systemName: "location.fill")
+                                                    .foregroundColor(.textSecondary)
+                                                    .font(.system(size: 16))
+                                                    .frame(width: 20)
+                                                
+                                                Text(ubicacionSeleccionada.isEmpty ? "Selecciona tu ubicación" : ubicacionSeleccionada)
+                                                    .foregroundColor(ubicacionSeleccionada.isEmpty ? .textSecondary : .textPrimary)
+                                                    .font(.system(size: 16))
+                                                
+                                                Spacer()
+                                                
+                                                Image(systemName: showUbicacionesDropdown ? "chevron.up" : "chevron.down")
+                                                    .foregroundColor(.textSecondary)
+                                                    .font(.system(size: 12))
+                                            }
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 14)
+                                        }
+                                        .background(Color.inputBackground)
+                                        .cornerRadius(8)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .stroke(
+                                                    showUbicacionesDropdown ? Color.primaryOrange : Color.borderColor,
+                                                    lineWidth: 1
+                                                )
+                                        )
                                         
-                                        TextField("Ciudad, País", text: $ubicacion)
-                                            .foregroundColor(.textPrimary)
-                                            .tint(.primaryOrange)
+                                        // Dropdown lista
+                                        if showUbicacionesDropdown {
+                                            VStack(spacing: 0) {
+                                                ScrollView {
+                                                    LazyVStack(spacing: 0) {
+                                                        ForEach(Ubicaciones, id: \.self) { ubicacion in
+                                                            Button(action: {
+                                                                ubicacionSeleccionada = ubicacion
+                                                                withAnimation(.easeInOut(duration: 0.2)) {
+                                                                    showUbicacionesDropdown = false
+                                                                }
+                                                            }) {
+                                                                HStack {
+                                                                    Text(ubicacion)
+                                                                        .font(.system(size: 16))
+                                                                        .foregroundColor(.textPrimary)
+                                                                    
+                                                                    Spacer()
+                                                                    
+                                                                    if ubicacionSeleccionada == ubicacion {
+                                                                        Image(systemName: "checkmark")
+                                                                            .foregroundColor(.primaryOrange)
+                                                                            .font(.system(size: 14))
+                                                                    }
+                                                                }
+                                                                .padding(.horizontal, 16)
+                                                                .padding(.vertical, 12)
+                                                            }
+                                                            .background(
+                                                                ubicacionSeleccionada == ubicacion ? 
+                                                                Color.primaryOrange.opacity(0.1) : 
+                                                                Color.clear
+                                                            )
+                                                            
+                                                            if ubicacion != Ubicaciones.last {
+                                                                Divider()
+                                                                    .background(Color.borderColor)
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                .frame(maxHeight: 200)
+                                            }
+                                            .background(Color.inputBackground)
+                                            .cornerRadius(8)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .stroke(Color.primaryOrange, lineWidth: 1)
+                                            )
+                                            .padding(.top, 4)
+                                        }
                                     }
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 14)
-                                    .background(Color.inputBackground)
-                                    .cornerRadius(8)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.borderColor, lineWidth: 1)
-                                    )
                                 }
                                 
                                 // Biografía
@@ -569,24 +642,93 @@ struct RegistroEstudianteView: View {
                                         .font(.system(size: 14))
                                         .foregroundColor(.textSecondary)
                                     
-                                    HStack(spacing: 12) {
-                                        Image(systemName: "graduationcap.fill")
-                                            .foregroundColor(.textSecondary)
-                                            .font(.system(size: 16))
-                                            .frame(width: 20)
+                                    VStack(spacing: 0) {
+                                        Button(action: {
+                                            withAnimation(.easeInOut(duration: 0.2)) {
+                                                showCarrerasDropdown.toggle()
+                                            }
+                                        }) {
+                                            HStack(spacing: 12) {
+                                                Image(systemName: "graduationcap.fill")
+                                                    .foregroundColor(.textSecondary)
+                                                    .font(.system(size: 16))
+                                                    .frame(width: 20)
+                                                
+                                                Text(carreraSeleccionada.isEmpty ? "Selecciona tu carrera" : carreraSeleccionada)
+                                                    .foregroundColor(carreraSeleccionada.isEmpty ? .textSecondary : .textPrimary)
+                                                    .font(.system(size: 16))
+                                                
+                                                Spacer()
+                                                
+                                                Image(systemName: showCarrerasDropdown ? "chevron.up" : "chevron.down")
+                                                    .foregroundColor(.textSecondary)
+                                                    .font(.system(size: 12))
+                                            }
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 14)
+                                        }
+                                        .background(Color.inputBackground)
+                                        .cornerRadius(8)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .stroke(
+                                                    showCarrerasDropdown ? Color.primaryOrange : Color.borderColor,
+                                                    lineWidth: 1
+                                                )
+                                        )
                                         
-                                        TextField("Ingeniería en Sistemas, Diseño Gráfico, etc.", text: $carrera)
-                                            .foregroundColor(.textPrimary)
-                                            .tint(.primaryOrange)
+                                        // Dropdown lista
+                                        if showCarrerasDropdown {
+                                            VStack(spacing: 0) {
+                                                ScrollView {
+                                                    LazyVStack(spacing: 0) {
+                                                        ForEach(Carreras, id: \.self) { carrera in
+                                                            Button(action: {
+                                                                carreraSeleccionada = carrera
+                                                                withAnimation(.easeInOut(duration: 0.2)) {
+                                                                    showCarrerasDropdown = false
+                                                                }
+                                                            }) {
+                                                                HStack {
+                                                                    Text(carrera)
+                                                                        .font(.system(size: 16))
+                                                                        .foregroundColor(.textPrimary)
+                                                                    
+                                                                    Spacer()
+                                                                    
+                                                                    if carreraSeleccionada == carrera {
+                                                                        Image(systemName: "checkmark")
+                                                                            .foregroundColor(.primaryOrange)
+                                                                            .font(.system(size: 14))
+                                                                    }
+                                                                }
+                                                                .padding(.horizontal, 16)
+                                                                .padding(.vertical, 12)
+                                                            }
+                                                            .background(
+                                                                carreraSeleccionada == carrera ? 
+                                                                Color.primaryOrange.opacity(0.1) : 
+                                                                Color.clear
+                                                            )
+                                                            
+                                                            if carrera != Carreras.last {
+                                                                Divider()
+                                                                    .background(Color.borderColor)
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                .frame(maxHeight: 200)
+                                            }
+                                            .background(Color.inputBackground)
+                                            .cornerRadius(8)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .stroke(Color.primaryOrange, lineWidth: 1)
+                                            )
+                                            .padding(.top, 4)
+                                        }
                                     }
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 14)
-                                    .background(Color.inputBackground)
-                                    .cornerRadius(8)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.borderColor, lineWidth: 1)
-                                    )
                                 }
                                 
                                 // Universidad
@@ -727,10 +869,16 @@ struct RegistroEstudianteView: View {
         }
         .navigationBarHidden(true)
         .onTapGesture {
-            // Cerrar dropdown si se toca fuera
-            if showPaisesDropdown {
-                withAnimation(.easeInOut(duration: 0.2)) {
+            // Cerrar dropdowns si se toca fuera
+            withAnimation(.easeInOut(duration: 0.2)) {
+                if showPaisesDropdown {
                     showPaisesDropdown = false
+                }
+                if showUbicacionesDropdown {
+                    showUbicacionesDropdown = false
+                }
+                if showCarrerasDropdown {
+                    showCarrerasDropdown = false
                 }
             }
         }
@@ -790,9 +938,9 @@ struct RegistroEstudianteView: View {
         !nombreCompleto.isEmpty &&
         !telefono.isEmpty &&
         !paisSeleccionado.isEmpty &&
-        !ubicacion.isEmpty &&
+        !ubicacionSeleccionada.isEmpty &&
         !biografia.isEmpty &&
-        !carrera.isEmpty &&
+        !carreraSeleccionada.isEmpty &&
         acceptTerms &&
         password.count >= 6 &&
         passwordsMatch
@@ -858,10 +1006,10 @@ struct RegistroEstudianteView: View {
                     email: email,
                     password: password,
                     nombreCompleto: nombreCompleto,
-                    carrera: carrera,
+                    carrera: carreraSeleccionada,
                     telefono: telefono,
                     biografia: biografia,
-                    ubicacion: ubicacion,
+                    ubicacion: ubicacionSeleccionada,
                     pais: paisSeleccionado,
                     nombreComercial: nil,
                     universidadActual: universidad.isEmpty ? nil : universidad,

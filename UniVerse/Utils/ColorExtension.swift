@@ -29,6 +29,7 @@ extension Color {
     
     // Colores del tema de la app
     static let primaryOrange = Color(hex: "FF8C00")
+    static let primaryPurple = Color(hex: "7C3AED") // Color para empresas
     static let textSecondary = Color(hex: "6B7280")
     static let backgroundLight = Color(hex: "F9FAFB")
     static let cardBackground = Color.white
@@ -36,5 +37,7 @@ extension Color {
     static let borderColor = Color(hex: "E5E7EB")
     static let backgroundDark = Color(hex: "0D1117")
     static let textPrimary = Color(hex: "1F2937")
+    static let primaryText = Color(hex: "1F2937")
+    static let secondaryText = Color(hex: "6B7280")
 
 }
