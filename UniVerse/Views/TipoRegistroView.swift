@@ -7,8 +7,8 @@ struct SeleccionTipoRegistroView: View {
     
     var body: some View {
         ZStack {
-            // Fondo oscuro
-            Color.backgroundDark
+            // Fondo claro
+            Color.backgroundLight
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -19,7 +19,7 @@ struct SeleccionTipoRegistroView: View {
                     // Título
                     Text("¿Cómo quieres\nregistrarte?")
                         .font(.system(size: 24, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                         .multilineTextAlignment(.center)
                         .padding(.top, 32)
                     
@@ -27,16 +27,6 @@ struct SeleccionTipoRegistroView: View {
                     VStack(spacing: 12) {
                         NavigationLink(destination: RegistroEmpresaView().environmentObject(authVM)) {
                             Text("Empresa")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(Color.primaryOrange)
-                                .cornerRadius(8)
-                        }
-                        
-                        NavigationLink(destination: RegistroUniversidadView().environmentObject(authVM)) {
-                            Text("Universidad")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
@@ -87,7 +77,7 @@ struct SeleccionTipoRegistroView: View {
                     dismiss()
                 }) {
                     Image(systemName: "chevron.left")
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                 }
             }
         }

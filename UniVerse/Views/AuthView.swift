@@ -7,13 +7,11 @@ struct AuthView: View {
     @State private var password = ""
     @State private var rememberMe = false
     @State private var showPassword = false
-    @State private var showingAlert = false
-    @State private var alertMessage = ""
     
     var body: some View {
         ZStack {
-            // Fondo oscuro
-            Color.backgroundDark
+            // Fondo claro
+            Color.backgroundLight
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -25,7 +23,7 @@ struct AuthView: View {
                     VStack(spacing: 4) {
                         Text("Accede")
                             .font(.system(size: 28, weight: .semibold))
-                            .foregroundColor(.white)
+                            .foregroundColor(.textPrimary)
                         
                         Text("Inicia sesión en tu cuenta")
                             .font(.system(size: 13))
@@ -48,10 +46,16 @@ struct AuthView: View {
                                     .frame(width: 20)
                                 
                                 TextField("", text: $email)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.textPrimary)
                                     .textInputAutocapitalization(.never)
                                     .keyboardType(.emailAddress)
                                     .tint(.primaryOrange)
+                                    .onChange(of: email) { _ in
+                                        // Limpiar error cuando el usuario empiece a escribir
+                                        if authVM.errorMessage != nil {
+                                            authVM.errorMessage = nil
+                                        }
+                                    }
                             }
                             .padding(.horizontal, 14)
                             .padding(.vertical, 12)
@@ -89,12 +93,24 @@ struct AuthView: View {
                                 
                                 if showPassword {
                                     TextField("", text: $password)
-                                        .foregroundColor(.white)
+                                        .foregroundColor(.textPrimary)
                                         .tint(.primaryOrange)
+                                        .onChange(of: password) { _ in
+                                            // Limpiar error cuando el usuario empiece a escribir
+                                            if authVM.errorMessage != nil {
+                                                authVM.errorMessage = nil
+                                            }
+                                        }
                                 } else {
                                     SecureField("", text: $password)
-                                        .foregroundColor(.white)
+                                        .foregroundColor(.textPrimary)
                                         .tint(.primaryOrange)
+                                        .onChange(of: password) { _ in
+                                            // Limpiar error cuando el usuario empiece a escribir
+                                            if authVM.errorMessage != nil {
+                                                authVM.errorMessage = nil
+                                            }
+                                        }
                                 }
                             }
                             .padding(.horizontal, 14)
@@ -127,7 +143,7 @@ struct AuthView: View {
                                     
                                     Text("Recordarme")
                                         .font(.system(size: 13))
-                                        .foregroundColor(.white)
+                                        .foregroundColor(.textPrimary)
                                 }
                             }
                             
@@ -142,6 +158,29 @@ struct AuthView: View {
                         .padding(.top, 4)
                     }
                     .padding(.horizontal, 20)
+                    
+                    // Mostrar error de autenticación
+                    if let error = authVM.errorMessage {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.red)
+                                .font(.system(size: 14))
+                            
+                            Text(error)
+                                .font(.system(size: 13))
+                                .foregroundColor(.red)
+                                .multilineTextAlignment(.leading)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.red.opacity(0.3), lineWidth: 1)
+                        )
+                        .padding(.horizontal, 20)
+                    }
                     
                     // Botón de entrar
                     Button(action: handleAuth) {
@@ -193,27 +232,46 @@ struct AuthView: View {
                 Spacer()
             }
         }
-        .alert("Error", isPresented: $showingAlert) {
-            Button("OK", role: .cancel) { }
-        } message: {
-            Text(alertMessage)
-        }
     }
     
     private func handleAuth() {
+        // Limpiar errores previos
+        authVM.errorMessage = nil
+        
         guard !email.isEmpty, !password.isEmpty else {
-            alertMessage = "Por favor completa todos los campos"
-            showingAlert = true
+            authVM.errorMessage = "Por favor completa todos los campos"
             return
         }
         
         Task {
             do {
                 try await authVM.signIn(email: email, password: password)
+                // Si llegamos aquí, el login fue exitoso
             } catch {
-                alertMessage = error.localizedDescription
-                showingAlert = true
+                // Mostrar mensaje de error más claro
+                let errorMessage = parseAuthError(error)
+                authVM.errorMessage = errorMessage
             }
+        }
+    }
+    
+    private func parseAuthError(_ error: Error) -> String {
+        let errorDescription = error.localizedDescription.lowercased()
+        
+        if errorDescription.contains("invalid login credentials") ||
+           errorDescription.contains("invalid_grant") ||
+           errorDescription.contains("email not confirmed") {
+            return "Email o contraseña incorrectos. Por favor verifica tus credenciales."
+        } else if errorDescription.contains("user not found") ||
+                  errorDescription.contains("email_not_found") {
+            return "No existe una cuenta con este email. Verifica el email o regístrate."
+        } else if errorDescription.contains("too_many_requests") {
+            return "Demasiados intentos. Espera unos minutos antes de intentar nuevamente."
+        } else if errorDescription.contains("network") ||
+                  errorDescription.contains("connection") {
+            return "Error de conexión. Verifica tu internet e intenta nuevamente."
+        } else {
+            return "Error al iniciar sesión. Verifica tus credenciales e intenta nuevamente."
         }
     }
 }

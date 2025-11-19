@@ -1,0 +1,20 @@
+let Paises = [
+    "El Salvador",
+    "Guatemala",
+    "Honduras",
+    "Nicaragua",
+    "Costa Rica",
+    "Panamá",
+    "Belice",
+    "Mexico",
+    "Argentina",
+    "Brasil",
+    "Chile",
+    "Colombia",
+    "México",
+    "Perú",
+    "Uruguay",
+    "Venezuela",
+    "Ecuador",
+    "Bolivia"
+]

@@ -6,7 +6,7 @@ struct FeedView: View {
     
     var body: some View {
         ZStack {
-            Color.backgroundDark.ignoresSafeArea()
+            Color.backgroundLight.ignoresSafeArea()
             
             VStack(spacing: 0) {
                 // MARK: - Header
@@ -48,7 +48,7 @@ struct FeedView: View {
                     
                     Text("UniVerse")
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                 }
                 
                 Spacer()
@@ -89,7 +89,7 @@ struct FeedView: View {
                 .fill(Color.borderColor)
                 .frame(height: 1)
         }
-        .background(Color.backgroundDark.opacity(0.8))
+        .background(Color.backgroundLight.opacity(0.95))
         .backdrop()
     }
     
@@ -104,7 +104,7 @@ struct FeedView: View {
                 if let perfil = user.perfil {
                     Text(perfil.nombreCompleto)
                         .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                 } else {
                     HStack(spacing: 8) {
                         Image(systemName: "exclamationmark.triangle.fill")
@@ -151,7 +151,7 @@ struct FeedView: View {
         VStack(spacing: 8) {
             Text("Feed de UniVerse")
                 .font(.system(size: 26, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(.textPrimary)
             
             Text("Aquí aparecerán las publicaciones, ofertas de trabajo y contenido de la red social.")
                 .font(.system(size: 14))
@@ -185,7 +185,7 @@ struct FeedView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Usuario \(index)")
                         .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                     
                     Text("hace 2 horas")
                         .font(.system(size: 11))
@@ -207,7 +207,7 @@ struct FeedView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Esta es una publicación de ejemplo #\(index). Aquí los usuarios podrán compartir sus experiencias, proyectos y conectar con empresas.")
                     .font(.system(size: 14))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
                     .lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
             }

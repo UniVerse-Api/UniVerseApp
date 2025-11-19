@@ -30,8 +30,9 @@ class AuthService {
             pCarrera: datos.pCarrera,
             pUniversidadActual: datos.pUniversidadActual,
             pFotoPerfil: datos.pFotoPerfil,
-            pSitioWeb: datos.pSitioWeb
-        )
+            pSitioWeb: datos.pSitioWeb,
+            pPais: datos.pPais
+        )   
         
         let response: RegistroResponse = try await client
             .rpc("registrar_estudiante", params: datosCompletos)

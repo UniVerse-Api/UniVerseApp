@@ -9,7 +9,8 @@ CREATE OR REPLACE FUNCTION registrar_estudiante(
     p_carrera VARCHAR(25),
     p_universidad_actual VARCHAR(30) DEFAULT NULL,
     p_foto_perfil VARCHAR(255) DEFAULT NULL,
-    p_sitio_web VARCHAR(500) DEFAULT NULL
+    p_sitio_web VARCHAR(500) DEFAULT NULL,
+    p_pais VARCHAR(20) DEFAULT NULL
 )
 RETURNS json
 LANGUAGE plpgsql
@@ -49,13 +50,15 @@ BEGIN
         id_perfil,
         nombre_comercial,
         carrera,
-        universidad_actual
+        universidad_actual,
+        pais
     )
     VALUES (
         v_id_perfil,
         p_nombre_comercial,
         p_carrera,
-        p_universidad_actual
+        p_universidad_actual,
+        p_pais
     );
     
     -- Retornar resultado

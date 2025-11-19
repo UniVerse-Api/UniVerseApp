@@ -13,7 +13,7 @@ struct Usuario: Codable, Identifiable {
         case rol
         case estado
         case fechaCreacion = "fecha_creacion"
-        case perfil = "Perfil"
+        case perfil = "perfil"
     }
     
     // Decodificador personalizado para manejar perfil como array o objeto
@@ -51,12 +51,16 @@ struct Usuario: Codable, Identifiable {
 enum RolUsuario: String, Codable {
     case estudiante
     case empresa
+    case universidad
+    case docente
+    case admin
 }
 
 enum EstadoUsuario: String, Codable {
     case activo
     case inactivo
     case suspendido
+    case pendiente
 }
 
 struct Perfil: Codable, Identifiable {
@@ -68,6 +72,7 @@ struct Perfil: Codable, Identifiable {
     let ubicacion: String
     let telefono: String
     let sitioWeb: String?
+    let pais: String  // NUEVO CAMPO
     var perfilEstudiante: PerfilEstudiante?
     var perfilEmpresa: PerfilEmpresa?
     
@@ -80,8 +85,9 @@ struct Perfil: Codable, Identifiable {
         case ubicacion
         case telefono
         case sitioWeb = "sitio_web"
-        case perfilEstudiante = "Perfil_estudiante"
-        case perfilEmpresa = "Perfil_empresa"
+        case pais  // NUEVO CAMPO
+        case perfilEstudiante = "perfil_estudiante"
+        case perfilEmpresa = "perfil_empresa"
     }
     
     // Decodificador personalizado para manejar subobjetos que pueden venir como arrays
@@ -96,7 +102,8 @@ struct Perfil: Codable, Identifiable {
         ubicacion = try container.decode(String.self, forKey: .ubicacion)
         telefono = try container.decode(String.self, forKey: .telefono)
         sitioWeb = try container.decodeIfPresent(String.self, forKey: .sitioWeb)
-        
+        pais = try container.decode(String.self, forKey: .pais)  // NUEVO CAMPO
+
         // Manejar perfilEstudiante
         if let estudianteObject = try? container.decode(PerfilEstudiante.self, forKey: .perfilEstudiante) {
             perfilEstudiante = estudianteObject
@@ -127,6 +134,7 @@ struct Perfil: Codable, Identifiable {
         try container.encode(ubicacion, forKey: .ubicacion)
         try container.encode(telefono, forKey: .telefono)
         try container.encodeIfPresent(sitioWeb, forKey: .sitioWeb)
+        try container.encode(pais, forKey: .pais)  // NUEVO CAMPO
         try container.encodeIfPresent(perfilEstudiante, forKey: .perfilEstudiante)
         try container.encodeIfPresent(perfilEmpresa, forKey: .perfilEmpresa)
     }
@@ -150,12 +158,39 @@ struct PerfilEstudiante: Codable {
 
 struct PerfilEmpresa: Codable {
     let idPerfil: Int
-    let nombreEmpresa: String
+    let nombreComercial: String
+    let anioFundacion: Int
+    let totalEmpleados: Int
+    let docVerificacion: String
     let fechaCreacion: Date
+    let fotoPortada: String?
     
     enum CodingKeys: String, CodingKey {
         case idPerfil = "id_perfil"
-        case nombreEmpresa = "nombre_empresa"
+        case nombreComercial = "nombre_comercial"
+        case anioFundacion = "anio_fundacion"
+        case totalEmpleados = "total_empleados"
+        case docVerificacion = "doc_verificacion"
         case fechaCreacion = "fecha_creacion"
+        case fotoPortada = "foto_portada"
+    }
+}
+
+// MARK: - CV Archivo Model
+struct CVArchivo: Codable {
+    let idCv: Int?
+    let idPerfil: Int
+    let nombre: String
+    let urlCv: String
+    let fechaSubida: Date?
+    let visible: String
+    
+    enum CodingKeys: String, CodingKey {
+        case idCv = "id_cv"
+        case idPerfil = "id_perfil"
+        case nombre
+        case urlCv = "url_cv"
+        case fechaSubida = "fecha_subida"
+        case visible
     }
 }

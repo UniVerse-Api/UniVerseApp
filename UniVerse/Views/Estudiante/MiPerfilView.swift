@@ -8,7 +8,7 @@ struct MiPerfilView: View {
     
     var body: some View {
         ZStack {
-            Color.backgroundDark.ignoresSafeArea()
+            Color.backgroundLight.ignoresSafeArea()
             
             VStack(spacing: 0) {
                 // MARK: - Header
