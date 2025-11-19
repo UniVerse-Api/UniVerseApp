@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct MiPerfilView: View {
+    @EnvironmentObject var authVM: AuthViewModel
     @State private var selectedTab: ProfileTab = .general
     @State private var selectedActivityTab: ActivityTab = .posts
     @State private var showEditProfile = false
@@ -56,13 +57,26 @@ struct MiPerfilView: View {
                 
                 Spacer()
                 
-                Button(action: {
-                    showSettings = true
-                }) {
-                    Image(systemName: "gearshape.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(.white)
-                        .padding(8)
+                HStack(spacing: 12) {
+                    Button(action: {
+                        showSettings = true
+                    }) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(.white)
+                            .padding(8)
+                    }
+                    
+                    Button(action: {
+                        Task {
+                            try? await authVM.signOut()
+                        }
+                    }) {
+                        Image(systemName: "rectangle.portrait.and.arrow.right")
+                            .font(.system(size: 18))
+                            .foregroundColor(.red)
+                            .padding(8)
+                    }
                 }
             }
             .padding(.horizontal, 16)
@@ -1198,10 +1212,11 @@ struct BenefitRow: View {
     }
 }
 
-// MARK: - Preview
+// MARK: - Preview 
 #Preview {
     NavigationView {
         MiPerfilView()
+            .environmentObject(AuthViewModel())
     }
     .preferredColorScheme(.dark)
 }
