@@ -377,18 +377,20 @@ struct FeedView: View {
                 handleLike(feedItem)
             }) {
                 HStack(spacing: 6) {
-                    Image(systemName: "heart")
+                    Image(systemName: feedItem.tieneLikeUsuario ? "heart.fill" : "heart")
                         .font(.system(size: 16))
+                        .foregroundColor(feedItem.tieneLikeUsuario ? .red : .textSecondary)
                     
                     Text("Me gusta")
                         .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(feedItem.tieneLikeUsuario ? .red : .textSecondary)
                     
                     if let likes = feedItem.likesContador, likes > 0 {
                         Text("(\(likes))")
                             .font(.system(size: 11))
+                            .foregroundColor(feedItem.tieneLikeUsuario ? .red : .textSecondary)
                     }
                 }
-                .foregroundColor(.textSecondary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
             }

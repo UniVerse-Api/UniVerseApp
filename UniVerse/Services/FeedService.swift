@@ -117,41 +117,52 @@ class FeedService: ObservableObject {
     
     // MARK: - Interaction Functions
     
-    /// Da like a una publicación
+    /// Togglea like en una publicación usando RPC
     /// - Parameters:
     ///   - idPublicacion: ID de la publicación
-    ///   - idPerfil: ID del perfil que da like
-    func likePublicacion(idPublicacion: Int, idPerfil: Int) async throws {
+    ///   - idPerfil: ID del perfil que da/quita like
+    /// - Returns: Tuple con estado del like y total de likes
+    func toggleLikePublicacion(idPublicacion: Int, idPerfil: Int) async throws -> (tieneLike: Bool, totalLikes: Int) {
+        print("DEBUG FeedService: toggleLikePublicacion called for publicacion: \(idPublicacion), perfil: \(idPerfil)")
+        
         do {
-            // Primero verificar si ya existe el like
-            let existingLike = try await client
-                .from("Like_publicacion")
-                .select("*")
-                .eq("id_publicacion", value: idPublicacion)
-                .eq("id_perfil", value: idPerfil)
-                .execute()
+            let response = try await client.rpc(
+                "toggle_like_publicacion",
+                params: [
+                    "p_id_publicacion": idPublicacion,
+                    "p_id_perfil": idPerfil
+                ]
+            ).execute()
             
-            let isEmpty = existingLike.data.isEmpty
-            if isEmpty {
-                // No existe, crear el like
-                try await client
-                    .from("Like_publicacion")
-                    .insert([
-                        "id_publicacion": idPublicacion,
-                        "id_perfil": idPerfil
-                    ])
-                    .execute()
-            } else {
-                // Ya existe, remover el like
-                try await client
-                    .from("Like_publicacion")
-                    .delete()
-                    .eq("id_publicacion", value: idPublicacion)
-                    .eq("id_perfil", value: idPerfil)
-                    .execute()
+            print("DEBUG FeedService: RPC toggle_like_publicacion response received")
+            
+            // Decodificar la respuesta
+            struct LikeResponse: Codable {
+                let tieneLike: Bool
+                let totalLikes: Int
+                
+                enum CodingKeys: String, CodingKey {
+                    case tieneLike = "tiene_like"
+                    case totalLikes = "total_likes"
+                }
             }
             
+            let decoder = JSONDecoder()
+            let likeResults = try decoder.decode([LikeResponse].self, from: response.data)
+            
+            guard let result = likeResults.first else {
+                print("DEBUG FeedService: No result from toggle_like_publicacion")
+                throw FeedError.invalidResponse
+            }
+            
+            print("DEBUG FeedService: Like toggled - tieneLike: \(result.tieneLike), totalLikes: \(result.totalLikes)")
+            return (result.tieneLike, result.totalLikes)
+            
         } catch let error as PostgrestError {
+            print("DEBUG FeedService: PostgrestError in toggleLike: \(error.localizedDescription)")
+            throw FeedError.networkError(error.localizedDescription)
+        } catch {
+            print("DEBUG FeedService: General error in toggleLike: \(error.localizedDescription)")
             throw FeedError.networkError(error.localizedDescription)
         }
     }

@@ -9,7 +9,7 @@ struct FeedItem: Identifiable, Codable, Equatable {
     let fotoPerfil: String?
     let titulo: String?
     let descripcion: String
-    let likesContador: Int?
+    var likesContador: Int? // Cambiado a var para poder actualizarlo
     let comentariosContador: Int?
     let fechaPublicacion: Date
     let recursos: [RecursoItem]
@@ -19,6 +19,9 @@ struct FeedItem: Identifiable, Codable, Equatable {
     let vistaContador: Int?
     let fechaInicio: Date?
     let fechaFin: Date?
+    
+    // Estado local para el like del usuario actual (no viene de la DB)
+    var tieneLikeUsuario: Bool = false
     
     // Computed property para usar como identificador en SwiftUI
     var uniqueId: String {
@@ -112,6 +115,9 @@ struct FeedItem: Identifiable, Codable, Equatable {
         } else {
             fechaFin = nil
         }
+        
+        // Inicializar estado local del like como false
+        tieneLikeUsuario = false
     }
     
     static func == (lhs: FeedItem, rhs: FeedItem) -> Bool {

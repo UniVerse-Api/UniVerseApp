@@ -101,17 +101,43 @@ class FeedViewModel: ObservableObject {
     func toggleLike(for feedItem: FeedItem, userProfileId: Int) async {
         guard feedItem.esPublicacion else { return }
         
+        print("DEBUG FeedViewModel: toggleLike called for item \(feedItem.uniqueId)")
+        
+        // Encontrar el índice del item
+        guard let index = feedItems.firstIndex(where: { $0.uniqueId == feedItem.uniqueId }) else {
+            print("DEBUG FeedViewModel: Item not found in feedItems")
+            return
+        }
+        
         // Actualización optimista de la UI
-        updateLikeStateOptimistically(for: feedItem.uniqueId)
+        let currentLikeState = feedItems[index].tieneLikeUsuario
+        let currentLikes = feedItems[index].likesContador ?? 0
+        
+        // Actualizar inmediatamente la UI
+        feedItems[index].tieneLikeUsuario = !currentLikeState
+        feedItems[index].likesContador = currentLikes + (currentLikeState ? -1 : 1)
+        
+        print("DEBUG FeedViewModel: Optimistic update - newLikeState: \(!currentLikeState), newCount: \(feedItems[index].likesContador ?? 0)")
         
         do {
-            try await feedService.likePublicacion(
+            let result = try await feedService.toggleLikePublicacion(
                 idPublicacion: feedItem.id,
                 idPerfil: userProfileId
             )
+            
+            print("DEBUG FeedViewModel: Server response - tieneLike: \(result.tieneLike), totalLikes: \(result.totalLikes)")
+            
+            // Actualizar con los valores reales del servidor
+            feedItems[index].tieneLikeUsuario = result.tieneLike
+            feedItems[index].likesContador = result.totalLikes
+            
         } catch {
-            // Revertir el cambio si falla
-            updateLikeStateOptimistically(for: feedItem.uniqueId)
+            print("DEBUG FeedViewModel: Error toggling like, reverting: \(error.localizedDescription)")
+            
+            // Revertir el cambio optimista si falla
+            feedItems[index].tieneLikeUsuario = currentLikeState
+            feedItems[index].likesContador = currentLikes
+            
             errorMessage = "Error al dar like: \(error.localizedDescription)"
         }
     }
@@ -123,17 +149,16 @@ class FeedViewModel: ObservableObject {
     func toggleSave(for feedItem: FeedItem, userProfileId: Int) async {
         guard feedItem.esPublicacion else { return }
         
-        // Actualización optimista de la UI
-        updateSaveStateOptimistically(for: feedItem.uniqueId)
+        print("DEBUG FeedViewModel: toggleSave called for item \(feedItem.uniqueId)")
         
         do {
             try await feedService.savePublicacion(
                 idPublicacion: feedItem.id,
                 idPerfil: userProfileId
             )
+            print("DEBUG FeedViewModel: Save toggled successfully")
         } catch {
-            // Revertir el cambio si falla
-            updateSaveStateOptimistically(for: feedItem.uniqueId)
+            print("DEBUG FeedViewModel: Error toggling save: \(error.localizedDescription)")
             errorMessage = "Error al guardar: \(error.localizedDescription)"
         }
     }
@@ -165,26 +190,7 @@ class FeedViewModel: ObservableObject {
         return feedItems.first { $0.uniqueId == uniqueId }
     }
     
-    // MARK: - Private Methods
-    
-    /// Actualiza el estado de like de un item de forma optimista
-    /// - Parameter uniqueId: ID único del item
-    private func updateLikeStateOptimistically(for uniqueId: String) {
-        if let index = feedItems.firstIndex(where: { $0.uniqueId == uniqueId }) {
-            // Por simplicidad, solo mostraremos feedback visual temporal
-            // En una implementación real, necesitarías modificar el modelo para incluir estado local
-            print("Like toggled for item: \(uniqueId)")
-        }
-    }
-    
-    /// Actualiza el estado de guardado de un item de forma optimista
-    /// - Parameter uniqueId: ID único del item
-    private func updateSaveStateOptimistically(for uniqueId: String) {
-        if let index = feedItems.firstIndex(where: { $0.uniqueId == uniqueId }) {
-            // Por simplicidad, solo mostraremos feedback visual temporal
-            print("Save toggled for item: \(uniqueId)")
-        }
-    }
+    // MARK: - Private Methods - Simplificados
     
     /// Actualiza el contador de vistas de forma optimista
     /// - Parameter uniqueId: ID único del item
