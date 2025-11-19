@@ -372,47 +372,54 @@ struct FeedView: View {
     
     // MARK: - Actions for Publicaciones
     private func publicacionActions(_ feedItem: FeedItem) -> some View {
-        HStack(spacing: 0) {
-            Button(action: {
-                handleLike(feedItem)
-            }) {
-                HStack(spacing: 6) {
-                    Image(systemName: feedItem.tieneLikeUsuario ? "heart.fill" : "heart")
-                        .font(.system(size: 16))
-                        .foregroundColor(feedItem.tieneLikeUsuario ? .red : .textSecondary)
-                    
-                    Text("Me gusta")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(feedItem.tieneLikeUsuario ? .red : .textSecondary)
-                    
-                    if let likes = feedItem.likesContador, likes > 0 {
-                        Text("(\(likes))")
-                            .font(.system(size: 11))
+        let esPublicacionPropia = isOwnPost(feedItem)
+        
+        return HStack(spacing: 0) {
+            // Botón de Like - Solo mostrar si NO es publicación propia
+            if !esPublicacionPropia {
+                Button(action: {
+                    handleLike(feedItem)
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: feedItem.tieneLikeUsuario ? "heart.fill" : "heart")
+                            .font(.system(size: 16))
                             .foregroundColor(feedItem.tieneLikeUsuario ? .red : .textSecondary)
+                        
+                        Text("Me gusta")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(feedItem.tieneLikeUsuario ? .red : .textSecondary)
+                        
+                        if let likes = feedItem.likesContador, likes > 0 {
+                            Text("(\(likes))")
+                                .font(.system(size: 11))
+                                .foregroundColor(feedItem.tieneLikeUsuario ? .red : .textSecondary)
+                        }
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+                
+                // Botón de Comentario - Solo mostrar si NO es publicación propia
+                Button(action: {}) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "message")
+                            .font(.system(size: 16))
+                        
+                        Text("Comentar")
+                            .font(.system(size: 13, weight: .medium))
+                        
+                        if let comentarios = feedItem.comentariosContador, comentarios > 0 {
+                            Text("(\(comentarios))")
+                                .font(.system(size: 11))
+                        }
+                    }
+                    .foregroundColor(.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                }
             }
             
-            Button(action: {}) {
-                HStack(spacing: 6) {
-                    Image(systemName: "message")
-                        .font(.system(size: 16))
-                    
-                    Text("Comentar")
-                        .font(.system(size: 13, weight: .medium))
-                    
-                    if let comentarios = feedItem.comentariosContador, comentarios > 0 {
-                        Text("(\(comentarios))")
-                            .font(.system(size: 11))
-                    }
-                }
-                .foregroundColor(.textSecondary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-            }
-            
+            // Botón de Guardar - Siempre mostrar (tanto para propias como ajenas)
             Button(action: {
                 handleSave(feedItem)
             }) {
@@ -425,25 +432,49 @@ struct FeedView: View {
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(feedItem.estaGuardado ? .primaryOrange : .textSecondary)
                 }
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: esPublicacionPropia ? .infinity : .infinity)
                 .padding(.vertical, 12)
+            }
+            
+            // Si es publicación propia, agregar botón de opciones/editar
+            if esPublicacionPropia {
+                Button(action: {
+                    // TODO: Implementar acciones de editar/eliminar
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 16))
+                        
+                        Text("Opciones")
+                            .font(.system(size: 13, weight: .medium))
+                    }
+                    .foregroundColor(.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                }
             }
         }
     }
     
     // MARK: - Actions for Anuncios
     private func anuncioActions(_ feedItem: FeedItem) -> some View {
-        HStack(spacing: 12) {
-            Button(action: {}) {
-                Text("Ver detalles")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color.primaryOrange)
-                    .cornerRadius(8)
+        let esAnuncioPropio = isOwnPost(feedItem)
+        
+        return HStack(spacing: 12) {
+            // Botón "Ver detalles" - Solo mostrar si NO es anuncio propio
+            if !esAnuncioPropio {
+                Button(action: {}) {
+                    Text("Ver detalles")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.primaryOrange)
+                        .cornerRadius(8)
+                }
             }
             
+            // Botón de Guardar - Siempre mostrar
             Button(action: {
                 handleSave(feedItem)
             }) {
@@ -460,12 +491,39 @@ struct FeedView: View {
                 .background(feedItem.estaGuardado ? Color.primaryOrange : Color.primaryOrange.opacity(0.1))
                 .cornerRadius(8)
             }
+            
+            // Si es anuncio propio, mostrar botón de gestión
+            if esAnuncioPropio {
+                Button(action: {
+                    // TODO: Implementar acciones de gestionar anuncio
+                }) {
+                    Text("Gestionar")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.gray)
+                        .cornerRadius(8)
+                }
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
     }
     
     // MARK: - Helper Methods
+    
+    /// Determina si una publicación pertenece al usuario actual
+    /// - Parameter feedItem: Item del feed a verificar
+    /// - Returns: true si la publicación es del usuario actual, false en caso contrario
+    private func isOwnPost(_ feedItem: FeedItem) -> Bool {
+        guard let currentUser = authVM.currentUser,
+              let perfil = currentUser.perfil else {
+            return false
+        }
+        
+        return feedItem.idPerfil == perfil.id
+    }
     
     private func loadFeedIfNeeded() {
         
@@ -517,6 +575,12 @@ struct FeedView: View {
     private func handleLike(_ feedItem: FeedItem) {
         guard let currentUser = authVM.currentUser,
               let perfil = currentUser.perfil else { return }
+        
+        // Validar que no sea publicación propia
+        guard !isOwnPost(feedItem) else {
+            print("DEBUG: Cannot like own post")
+            return
+        }
         
         Task {
             await feedVM.toggleLike(for: feedItem, userProfileId: perfil.id)
