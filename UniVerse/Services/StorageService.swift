@@ -26,16 +26,9 @@ class StorageService {
         
         do {
             // Subir a bucket avatars
-            let file = File(
-                name: fileName,
-                data: imageData,
-                fileName: fileName,
-                contentType: "image/jpeg"
-            )
-            
             let path = try await supabase.storage
                 .from("avatars")
-                .upload(path: fileName, file: file)
+                .upload(path: fileName, file: imageData, options: FileOptions(contentType: "image/jpeg"))
             
             // Obtener URL público
             let url = try supabase.storage
@@ -68,16 +61,9 @@ class StorageService {
         
         do {
             // Subir a bucket docs
-            let file = File(
-                name: uniqueFileName,
-                data: documentData,
-                fileName: uniqueFileName,
-                contentType: "application/pdf"
-            )
-            
             let path = try await supabase.storage
                 .from("docs")
-                .upload(path: uniqueFileName, file: file)
+                .upload(path: uniqueFileName, file: documentData, options: FileOptions(contentType: "application/pdf"))
             
             // Obtener URL público
             let url = try supabase.storage

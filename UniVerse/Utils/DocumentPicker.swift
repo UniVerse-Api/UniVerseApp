@@ -74,7 +74,7 @@ struct DocumentPicker: UIViewControllerRepresentable {
 }
 
 // MARK: - Document Info Model
-struct DocumentInfo: Identifiable {
+struct DocumentInfo: Identifiable, Equatable {
     let id = UUID()
     let name: String
     let data: Data
@@ -91,6 +91,14 @@ struct DocumentInfo: Identifiable {
     var isValidPDF: Bool {
         return name.lowercased().hasSuffix(".pdf") && data.count > 0
     }
+    
+    static func == (lhs: DocumentInfo, rhs: DocumentInfo) -> Bool {
+        return lhs.id == rhs.id &&
+               lhs.name == rhs.name &&
+               lhs.size == rhs.size &&
+               lhs.url == rhs.url &&
+               lhs.data == rhs.data
+    }
 }
 
 // MARK: - Document Picker Button View
@@ -99,6 +107,18 @@ struct DocumentPickerButton: View {
     @State private var showingDocumentPicker = false
     @State private var showingAlert = false
     @State private var alertMessage = ""
+    
+    private var backgroundColor: Color {
+        selectedDocument != nil ? Color.green.opacity(0.1) : Color.gray.opacity(0.1)
+    }
+    
+    private var borderOverlay: some View {
+        RoundedRectangle(cornerRadius: 8)
+            .stroke(
+                selectedDocument != nil ? Color.green : Color.gray.opacity(0.3),
+                lineWidth: 1.5
+            )
+    }
     
     var body: some View {
         Button(action: {
@@ -170,31 +190,8 @@ struct DocumentPickerButton: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 20)
-            .background(
-                selectedDocument != nil ? 
-                Color.green.opacity(0.1) : 
-                Color.gray.opacity(0.1)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(
-                        selectedDocument != nil ? 
-                        Color.green : 
-                        Color.gray.opacity(0.3), 
-                        lineWidth: 1.5
-                    )
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(
-                                selectedDocument != nil ? 
-                                Color.green : 
-                                Color.clear, 
-                                lineWidth: 2
-                            )
-                            .blur(radius: 3)
-                            .opacity(0.3)
-                    )
-            )
+            .background(backgroundColor)
+            .overlay(borderOverlay)
             .cornerRadius(8)
         }
         .sheet(isPresented: $showingDocumentPicker) {
