@@ -23,6 +23,9 @@ struct FeedItem: Identifiable, Codable, Equatable {
     // Estado local para el like del usuario actual (no viene de la DB)
     var tieneLikeUsuario: Bool = false
     
+    // Estado local para favorito del usuario actual (no viene de la DB)
+    var estaGuardado: Bool = false
+    
     // Computed property para usar como identificador en SwiftUI
     var uniqueId: String {
         "\(tipo)_\(id)"
@@ -118,6 +121,9 @@ struct FeedItem: Identifiable, Codable, Equatable {
         
         // Inicializar estado local del like como false
         tieneLikeUsuario = false
+        
+        // Inicializar estado local de guardado como false
+        estaGuardado = false
     }
     
     static func == (lhs: FeedItem, rhs: FeedItem) -> Bool {

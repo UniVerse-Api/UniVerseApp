@@ -417,13 +417,14 @@ struct FeedView: View {
                 handleSave(feedItem)
             }) {
                 HStack(spacing: 6) {
-                    Image(systemName: "bookmark")
+                    Image(systemName: feedItem.estaGuardado ? "bookmark.fill" : "bookmark")
                         .font(.system(size: 16))
+                        .foregroundColor(feedItem.estaGuardado ? .primaryOrange : .textSecondary)
                     
                     Text("Guardar")
                         .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(feedItem.estaGuardado ? .primaryOrange : .textSecondary)
                 }
-                .foregroundColor(.textSecondary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
             }
@@ -447,16 +448,16 @@ struct FeedView: View {
                 handleSave(feedItem)
             }) {
                 HStack(spacing: 6) {
-                    Image(systemName: "bookmark")
+                    Image(systemName: feedItem.estaGuardado ? "bookmark.fill" : "bookmark")
                         .font(.system(size: 16))
                     
                     Text("Guardar")
                         .font(.system(size: 13, weight: .medium))
                 }
-                .foregroundColor(.primaryOrange)
+                .foregroundColor(feedItem.estaGuardado ? .white : .primaryOrange)
                 .padding(.vertical, 12)
                 .padding(.horizontal, 16)
-                .background(Color.primaryOrange.opacity(0.1))
+                .background(feedItem.estaGuardado ? Color.primaryOrange : Color.primaryOrange.opacity(0.1))
                 .cornerRadius(8)
             }
         }

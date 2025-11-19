@@ -145,20 +145,43 @@ class FeedViewModel: ObservableObject {
     /// Guarda o quita de guardados una publicación
     /// - Parameters:
     ///   - feedItem: Item del feed a guardar
-    ///   - idPerfil: ID del perfil del usuario actual
+    ///   - userProfileId: ID del perfil del usuario actual
     func toggleSave(for feedItem: FeedItem, userProfileId: Int) async {
         guard feedItem.esPublicacion else { return }
         
         print("DEBUG FeedViewModel: toggleSave called for item \(feedItem.uniqueId)")
         
+        // Encontrar el índice del item
+        guard let index = feedItems.firstIndex(where: { $0.uniqueId == feedItem.uniqueId }) else {
+            print("DEBUG FeedViewModel: Item not found in feedItems")
+            return
+        }
+        
+        // Actualización optimista de la UI
+        let currentSavedState = feedItems[index].estaGuardado
+        
+        // Actualizar inmediatamente la UI
+        feedItems[index].estaGuardado = !currentSavedState
+        
+        print("DEBUG FeedViewModel: Optimistic update - newSavedState: \(!currentSavedState)")
+        
         do {
-            try await feedService.savePublicacion(
+            let isNowSaved = try await feedService.toggleFavoritoPublicacion(
                 idPublicacion: feedItem.id,
                 idPerfil: userProfileId
             )
-            print("DEBUG FeedViewModel: Save toggled successfully")
+            
+            print("DEBUG FeedViewModel: Server response - estaGuardado: \(isNowSaved)")
+            
+            // Actualizar con el valor real del servidor
+            feedItems[index].estaGuardado = isNowSaved
+            
         } catch {
-            print("DEBUG FeedViewModel: Error toggling save: \(error.localizedDescription)")
+            print("DEBUG FeedViewModel: Error toggling save, reverting: \(error.localizedDescription)")
+            
+            // Revertir el cambio optimista si falla
+            feedItems[index].estaGuardado = currentSavedState
+            
             errorMessage = "Error al guardar: \(error.localizedDescription)"
         }
     }

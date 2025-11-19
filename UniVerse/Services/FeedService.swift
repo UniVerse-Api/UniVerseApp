@@ -167,7 +167,55 @@ class FeedService: ObservableObject {
         }
     }
     
-    /// Guarda una publicación en favoritos
+    /// Togglea favorito en una publicación usando RPC
+    /// - Parameters:
+    ///   - idPublicacion: ID de la publicación
+    ///   - idPerfil: ID del perfil que guarda/quita favorito
+    /// - Returns: Bool indicando si está guardado después del toggle
+    func toggleFavoritoPublicacion(idPublicacion: Int, idPerfil: Int) async throws -> Bool {
+        print("DEBUG FeedService: toggleFavoritoPublicacion called for publicacion: \(idPublicacion), perfil: \(idPerfil)")
+        
+        do {
+            let response = try await client.rpc(
+                "toggle_favorito_publicacion",
+                params: [
+                    "p_id_publicacion": idPublicacion,
+                    "p_id_perfil": idPerfil
+                ]
+            ).execute()
+            
+            print("DEBUG FeedService: RPC toggle_favorito_publicacion response received")
+            
+            // Decodificar la respuesta
+            struct FavoritoResponse: Codable {
+                let estaGuardado: Bool
+                
+                enum CodingKeys: String, CodingKey {
+                    case estaGuardado = "esta_guardado"
+                }
+            }
+            
+            let decoder = JSONDecoder()
+            let favoritoResults = try decoder.decode([FavoritoResponse].self, from: response.data)
+            
+            guard let result = favoritoResults.first else {
+                print("DEBUG FeedService: No result from toggle_favorito_publicacion")
+                throw FeedError.invalidResponse
+            }
+            
+            print("DEBUG FeedService: Favorito toggled - estaGuardado: \(result.estaGuardado)")
+            return result.estaGuardado
+            
+        } catch let error as PostgrestError {
+            print("DEBUG FeedService: PostgrestError in toggleFavorito: \(error.localizedDescription)")
+            throw FeedError.networkError(error.localizedDescription)
+        } catch {
+            print("DEBUG FeedService: General error in toggleFavorito: \(error.localizedDescription)")
+            throw FeedError.networkError(error.localizedDescription)
+        }
+    }
+    
+    /// Guarda una publicación en favoritos (función legacy)
     /// - Parameters:
     ///   - idPublicacion: ID de la publicación
     ///   - idPerfil: ID del perfil que guarda
