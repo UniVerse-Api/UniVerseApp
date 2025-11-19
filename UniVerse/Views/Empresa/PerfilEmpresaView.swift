@@ -346,7 +346,7 @@ struct PerfilEmpresaView: View {
 // MARK: - Supporting Views
 
 
-struct TabButton: View {
+struct TabButtond: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void
