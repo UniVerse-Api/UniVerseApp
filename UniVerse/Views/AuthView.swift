@@ -215,6 +215,16 @@ struct AuthView: View {
                                 .foregroundColor(.primaryOrange)
                         }
                     }
+                    NavigationLink(destination: LoginEmpresaView().environmentObject(authVM)) {
+                                            HStack(spacing: 6) {
+                                                Image(systemName: "building.2.fill")
+                                                    .font(.system(size: 12))
+                                                Text("Iniciar sesión como empresa")
+                                                    .font(.system(size: 13, weight: .medium))
+                                            }
+                                            .foregroundColor(.textSecondary)
+                                            .padding(.top, 8)
+                                        }
                     .padding(.bottom, 28)
                 }
                 .background(Color.cardBackground)
