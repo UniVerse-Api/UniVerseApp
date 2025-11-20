@@ -198,34 +198,45 @@ struct FeedView: View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
             HStack(spacing: 12) {
-                // Profile Image
-                AsyncImage(url: URL(string: feedItem.fotoPerfil ?? "")) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(colors: [.blue, .purple]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                // Profile Image - Clickeable
+                NavigationLink(
+                    destination: EstudiantePerfilFreeView(idPerfil: feedItem.idPerfil)
+                        .environmentObject(authVM)
+                ) {
+                    AsyncImage(url: URL(string: feedItem.fotoPerfil ?? "")) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [.blue, .purple]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                             )
-                        )
-                        .overlay(
-                            Text(String(feedItem.nombreCompleto.prefix(2)).uppercased())
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.white)
-                        )
+                            .overlay(
+                                Text(String(feedItem.nombreCompleto.prefix(2)).uppercased())
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(.white)
+                            )
+                    }
+                    .frame(width: 48, height: 48)
+                    .clipShape(Circle())
                 }
-                .frame(width: 48, height: 48)
-                .clipShape(Circle())
                 
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 8) {
-                        Text(feedItem.nombreCompleto)
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundColor(.textPrimary)
+                        // Nombre - Clickeable
+                        NavigationLink(
+                            destination: EstudiantePerfilFreeView(idPerfil: feedItem.idPerfil)
+                                .environmentObject(authVM)
+                        ) {
+                            Text(feedItem.nombreCompleto)
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundColor(.textPrimary)
+                        }
                         
                         // Badges
                         if feedItem.esAnuncio {

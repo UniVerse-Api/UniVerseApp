@@ -120,7 +120,7 @@ class AuthViewModel: ObservableObject {
                 
                 // 3. Cargar detalles específicos según el rol
                 if usuario.rol == .estudiante {
-                    let estudianteResponse: [PerfilEstudiante] = try await supabase
+                    let estudianteResponse: [PerfilEstudianteUsuario] = try await supabase
                         .from("perfil_estudiante")
                         .select("*")
                         .eq("id_perfil", value: perfil.id)
@@ -130,7 +130,7 @@ class AuthViewModel: ObservableObject {
                     perfil.perfilEstudiante = estudianteResponse.first
                     
                 } else if usuario.rol == .empresa {
-                    let empresaResponse: [PerfilEmpresa] = try await supabase
+                    let empresaResponse: [PerfilEmpresaUsuario] = try await supabase
                         .from("perfil_empresa")
                         .select("*")
                         .eq("id_perfil", value: perfil.id)
@@ -308,7 +308,7 @@ class AuthViewModel: ObservableObject {
                             visible: "si"
                         )
                         
-                        let _: [CVArchivo] = try await supabase
+                        let _: [CVArchivoUsuario] = try await supabase
                             .from("cv_archivo")
                             .insert(cvInsert)
                             .execute()
