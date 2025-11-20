@@ -73,8 +73,8 @@ struct Perfil: Codable, Identifiable {
     let telefono: String
     let sitioWeb: String?
     let pais: String  // NUEVO CAMPO
-    var perfilEstudiante: PerfilEstudiante?
-    var perfilEmpresa: PerfilEmpresa?
+    var perfilEstudiante: PerfilEstudianteUsuario?
+    var perfilEmpresa: PerfilEmpresaUsuario?
     
     enum CodingKeys: String, CodingKey {
         case id = "id_perfil"
@@ -105,18 +105,18 @@ struct Perfil: Codable, Identifiable {
         pais = try container.decode(String.self, forKey: .pais)  // NUEVO CAMPO
 
         // Manejar perfilEstudiante
-        if let estudianteObject = try? container.decode(PerfilEstudiante.self, forKey: .perfilEstudiante) {
+        if let estudianteObject = try? container.decode(PerfilEstudianteUsuario.self, forKey: .perfilEstudiante) {
             perfilEstudiante = estudianteObject
-        } else if let estudianteArray = try? container.decode([PerfilEstudiante].self, forKey: .perfilEstudiante) {
+        } else if let estudianteArray = try? container.decode([PerfilEstudianteUsuario].self, forKey: .perfilEstudiante) {
             perfilEstudiante = estudianteArray.first
         } else {
             perfilEstudiante = nil
         }
         
         // Manejar perfilEmpresa
-        if let empresaObject = try? container.decode(PerfilEmpresa.self, forKey: .perfilEmpresa) {
+        if let empresaObject = try? container.decode(PerfilEmpresaUsuario.self, forKey: .perfilEmpresa) {
             perfilEmpresa = empresaObject
-        } else if let empresaArray = try? container.decode([PerfilEmpresa].self, forKey: .perfilEmpresa) {
+        } else if let empresaArray = try? container.decode([PerfilEmpresaUsuario].self, forKey: .perfilEmpresa) {
             perfilEmpresa = empresaArray.first
         } else {
             perfilEmpresa = nil
@@ -140,7 +140,7 @@ struct Perfil: Codable, Identifiable {
     }
 }
 
-struct PerfilEstudiante: Codable {
+struct PerfilEstudianteUsuario: Codable {
     let idPerfil: Int
     let nombreComercial: String?
     let carrera: String
@@ -156,7 +156,7 @@ struct PerfilEstudiante: Codable {
     }
 }
 
-struct PerfilEmpresa: Codable {
+struct PerfilEmpresaUsuario: Codable {
     let idPerfil: Int
     let nombreComercial: String
     let anioFundacion: Int
@@ -177,7 +177,7 @@ struct PerfilEmpresa: Codable {
 }
 
 // MARK: - CV Archivo Model
-struct CVArchivo: Codable {
+struct CVArchivoUsuario: Codable {
     let idCv: Int?
     let idPerfil: Int
     let nombre: String

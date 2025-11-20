@@ -2,11 +2,152 @@ import SwiftUI
 
 struct EstudiantePerfilFreeView: View {
     @Environment(\.colorScheme) var colorScheme
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var authVM: AuthViewModel
     @State private var selectedTab = "General"
+    @State private var perfilCompleto: PerfilCompletoResponse?
+    @State private var isLoading = true
+    @State private var errorMessage: String?
+    
+    let idPerfil: Int
+    private let perfilService = PerfilService()
     
     var body: some View {
-        NavigationView {
-            ZStack(alignment: .bottom) {
+        ZStack(alignment: .bottom) {
+            if isLoading {
+                VStack(spacing: 0) {
+                    // Header con botón de atrás para pantalla de carga
+                    HStack {
+                        Button(action: {
+                            dismiss()
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.left")
+                                    .font(.title2)
+                                    .foregroundColor(.primary)
+                                
+                                Text("Atrás")
+                                    .font(.body)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.primary)
+                            }
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 4)
+                        }
+                        
+                        Spacer()
+                        
+                        Text("Cargando...")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
+                        
+                        Spacer()
+                        
+                        // Espacio para mantener centrado el título
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.left")
+                                .font(.title2)
+                            Text("Atrás")
+                                .font(.body)
+                                .fontWeight(.medium)
+                        }
+                        .opacity(0) // Invisible pero ocupa espacio
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 4)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(Color(UIColor.systemBackground))
+                    
+                    // Contenido de carga
+                    VStack {
+                        ProgressView("Cargando perfil...")
+                            .progressViewStyle(CircularProgressViewStyle(tint: .orange))
+                            .scaleEffect(1.2)
+                        
+                        Text("Obteniendo información del perfil")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.top, 8)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .background(Color(.systemBackground))
+            } else if let errorMessage = errorMessage {
+                VStack(spacing: 0) {
+                    // Header con botón de atrás para pantalla de error
+                    HStack {
+                        Button(action: {
+                            dismiss()
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.left")
+                                    .font(.title2)
+                                    .foregroundColor(.primary)
+                                
+                                Text("Atrás")
+                                    .font(.body)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.primary)
+                            }
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 4)
+                        }
+                        
+                        Spacer()
+                        
+                        Text("Error")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
+                        
+                        Spacer()
+                        
+                        // Espacio para mantener centrado el título
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.left")
+                                .font(.title2)
+                            Text("Atrás")
+                                .font(.body)
+                                .fontWeight(.medium)
+                        }
+                        .opacity(0) // Invisible pero ocupa espacio
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 4)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(Color(UIColor.systemBackground))
+                    
+                    // Contenido del error
+                    VStack(spacing: 16) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.largeTitle)
+                            .foregroundColor(.orange)
+                        
+                        Text("Error al cargar perfil")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                        
+                        Text(errorMessage)
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                        
+                        Button("Reintentar") {
+                            Task {
+                                await loadPerfil()
+                            }
+                        }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .frame(width: 120)
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .background(Color(.systemBackground))
+            } else if let perfil = perfilCompleto, perfil.success {
                 // Main Content
                 ScrollView {
                     VStack(spacing: 0) {
@@ -22,13 +163,25 @@ struct EstudiantePerfilFreeView: View {
                         // Content Sections
                         VStack(spacing: 16) {
                             aboutSection
-                            researchSection
-                            experienceSection
-                            educationSection
-                            documentsSection
-                            skillsSection
-                            languagesSection
-                            recommendationsSection
+                            if let investigaciones = perfil.investigaciones, !investigaciones.isEmpty {
+                                researchSection
+                            }
+                            if let experiencias = perfil.experiencias, !experiencias.isEmpty {
+                                experienceSection
+                            }
+                            if let formaciones = perfil.formaciones, !formaciones.isEmpty {
+                                educationSection
+                            }
+                            if let cvs = perfil.cvs, !cvs.isEmpty {
+                                documentsSection
+                            }
+                            if let habilidades = perfil.habilidades, !habilidades.isEmpty {
+                                skillsSection
+                            }
+                            if let idiomas = perfil.idiomas, !idiomas.isEmpty {
+                                languagesSection
+                            }
+                            // recommendationsSection
                         }
                         .padding(.horizontal, 16)
                         .padding(.bottom, 100) // Space for bottom nav
@@ -42,6 +195,133 @@ struct EstudiantePerfilFreeView: View {
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
+        .task {
+            await loadPerfil()
+        }
+    }
+    
+    // MARK: - Helper Functions
+    
+    private func getFlagEmoji(for country: String) -> String {
+        switch country.lowercased() {
+        case "el salvador":
+            return "🇸🇻"
+        case "guatemala":
+            return "🇬🇹"
+        case "honduras":
+            return "🇭🇳"
+        case "nicaragua":
+            return "🇳🇮"
+        case "costa rica":
+            return "🇨🇷"
+        case "panama", "panamá":
+            return "🇵🇦"
+        case "méxico", "mexico":
+            return "🇲🇽"
+        case "estados unidos", "usa":
+            return "🇺🇸"
+        default:
+            return "🌍"
+        }
+    }
+    
+    private func getLanguageFlag(_ language: String) -> String {
+        switch language.lowercased() {
+        case "español", "spanish":
+            return "🇸🇻"
+        case "inglés", "english":
+            return "🇺🇸"
+        case "francés", "french":
+            return "🇫🇷"
+        case "portugués", "portuguese":
+            return "🇵🇹"
+        case "italiano", "italian":
+            return "🇮🇹"
+        case "alemán", "german":
+            return "🇩🇪"
+        case "chino", "mandarín", "chinese":
+            return "🇨🇳"
+        case "japonés", "japanese":
+            return "🇯🇵"
+        default:
+            return "🌍"
+        }
+    }
+    
+    private func getExperienceIcon(_ tipo: String) -> String {
+        switch tipo.lowercased() {
+        case "pasantia":
+            return "graduationcap"
+        case "tiempo_completo":
+            return "briefcase.fill"
+        case "medio_tiempo":
+            return "briefcase"
+        case "voluntariado":
+            return "heart.fill"
+        default:
+            return "briefcase"
+        }
+    }
+    
+    private func formatDate(_ dateString: String) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        if let date = formatter.date(from: dateString) {
+            let displayFormatter = DateFormatter()
+            displayFormatter.dateStyle = .medium
+            displayFormatter.locale = Locale(identifier: "es_ES")
+            return displayFormatter.string(from: date)
+        }
+        
+        return dateString
+    }
+    
+    private func formatDateRange(_ startDate: String, _ endDate: String) -> String {
+        let start = formatDate(startDate)
+        let end = formatDate(endDate)
+        return "\(start) - \(end)"
+    }
+    
+    private func formatExperiencePeriod(_ experiencia: ExperienciaPerfil) -> String {
+        let start = formatDate(experiencia.fechaInicio)
+        let end = experiencia.fechaFin != nil ? formatDate(experiencia.fechaFin!) : "Presente"
+        let location = experiencia.ubicacion != nil ? " · \(experiencia.ubicacion!)" : ""
+        return "\(start) - \(end)\(location)"
+    }
+    
+    // MARK: - Data Loading
+    private func loadPerfil() async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            // Obtener el ID del perfil visitante si hay usuario logueado
+            var idPerfilVisitante: Int? = nil
+            if let currentUser = authVM.currentUser,
+               let perfil = currentUser.perfil {
+                idPerfilVisitante = perfil.id
+            }
+            
+            print("DEBUG EstudiantePerfilFreeView: Loading perfil \(idPerfil) with visitante \(idPerfilVisitante ?? -1)")
+            
+            let perfil = try await perfilService.getPerfilEstudianteCompleto(
+                idPerfil: idPerfil,
+                idPerfilVisitante: idPerfilVisitante
+            )
+            
+            await MainActor.run {
+                self.perfilCompleto = perfil
+                self.isLoading = false
+            }
+            
+        } catch {
+            await MainActor.run {
+                self.errorMessage = error.localizedDescription
+                self.isLoading = false
+            }
+            print("ERROR EstudiantePerfilFreeView: \(error.localizedDescription)")
+        }
     }
     
     // MARK: - Header
@@ -81,10 +361,21 @@ struct EstudiantePerfilFreeView: View {
         VStack(spacing: 16) {
             // Header Navigation
             HStack {
-                Button(action: {}) {
-                    Image(systemName: "arrow.left")
-                        .font(.title2)
-                        .foregroundColor(.primary)
+                Button(action: {
+                    dismiss()
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.left")
+                            .font(.title2)
+                            .foregroundColor(.primary)
+                        
+                        Text("Atrás")
+                            .font(.body)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+                    }
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 4)
                 }
                 
                 Spacer()
@@ -108,13 +399,18 @@ struct EstudiantePerfilFreeView: View {
             // Profile Info
             HStack(alignment: .top, spacing: 16) {
                 // Profile Image
-                AsyncImage(url: URL(string: "https://lh3.googleusercontent.com/aida-public/AB6AXuA9M9umYmFipJHj78VBSMq-mTfMSS709z1RUYU_dsyjYYAPKGd99RUxRCyjbI2EJ-9zAhvvfxe1xrM7znL5SsxkOiEeFkeNGbWWSdN5AyXHF68y0Ex0OxXmmTT13OXkM4UICZnIjCkJ2C8EDxYH7m1IIQ55Z9cAeFW-SPFrfHiaYBuzhO20EpOzEA7SiMZMQpLAagbOoH3MYjc57tvpp2RF_ka4-uHf5zUzDXaEPSehmG8QnABwML0p_ry-bJV-GL_qLJMaZ8OfuHg")) { image in
+                AsyncImage(url: URL(string: perfilCompleto?.perfilBasico?.fotoPerfil ?? "")) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                 } placeholder: {
                     Circle()
                         .fill(Color(.systemGray4))
+                        .overlay(
+                            Image(systemName: "person.fill")
+                                .font(.title)
+                                .foregroundColor(.white)
+                        )
                 }
                 .frame(width: 96, height: 96)
                 .clipShape(Circle())
@@ -122,12 +418,14 @@ struct EstudiantePerfilFreeView: View {
                 // Profile Details
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 8) {
-                        Text("Alexandra Chen")
+                        Text(perfilCompleto?.perfilBasico?.nombreCompleto ?? "Usuario")
                             .font(.title2)
                             .fontWeight(.bold)
                         
-                        Text("🇸🇻")
-                            .font(.title3)
+                        if let pais = perfilCompleto?.perfilBasico?.pais {
+                            Text(getFlagEmoji(for: pais))
+                                .font(.title3)
+                        }
                         
                         Spacer()
                     }
@@ -151,18 +449,24 @@ struct EstudiantePerfilFreeView: View {
                         Spacer()
                     }
                     
-                    Text("Ingeniería en Ciencias de la Computación")
-                        .font(.body)
-                        .foregroundColor(.secondary)
+                    if let carrera = perfilCompleto?.perfilEstudiante?.carrera {
+                        Text(carrera)
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                    }
                     
-                    Text("@ Universidad Estatal")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    if let universidad = perfilCompleto?.perfilEstudiante?.universidadActual {
+                        Text("@ \(universidad)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                     
-                    Text("San Francisco, CA")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding(.top, 2)
+                    if let ubicacion = perfilCompleto?.perfilBasico?.ubicacion {
+                        Text(ubicacion)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.top, 2)
+                    }
                 }
                 
                 Spacer()
@@ -194,9 +498,18 @@ struct EstudiantePerfilFreeView: View {
     // MARK: - Stats
     private var statsSection: some View {
         HStack(spacing: 0) {
-            StatView(number: "532", label: "Seguidores")
-            StatView(number: "189", label: "Siguiendo")
-            StatView(number: "24", label: "Publicaciones")
+            StatView(
+                number: "\(perfilCompleto?.estadisticas?.seguidores ?? 0)",
+                label: "Seguidores"
+            )
+            StatView(
+                number: "\(perfilCompleto?.estadisticas?.siguiendo ?? 0)",
+                label: "Siguiendo"
+            )
+            StatView(
+                number: "\(perfilCompleto?.estadisticas?.publicaciones ?? 0)",
+                label: "Publicaciones"
+            )
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 16)
@@ -233,10 +546,32 @@ struct EstudiantePerfilFreeView: View {
                     .font(.headline)
                     .fontWeight(.bold)
                 
-                Text("Estudiante apasionada por el desarrollo de software escalable y con sólida base en estructuras de datos y algoritmos. Busco aplicar mis conocimientos académicos a desafíos del mundo real.")
+                Text(perfilCompleto?.perfilBasico?.biografia ?? "Sin información disponible")
                     .font(.body)
                     .foregroundColor(.secondary)
                     .lineSpacing(4)
+                
+                if let telefono = perfilCompleto?.perfilBasico?.telefono {
+                    HStack {
+                        Image(systemName: "phone.fill")
+                            .foregroundColor(.orange)
+                        Text(telefono)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 8)
+                }
+                
+                if let sitioWeb = perfilCompleto?.perfilBasico?.sitioWeb {
+                    HStack {
+                        Image(systemName: "link")
+                            .foregroundColor(.orange)
+                        Text(sitioWeb)
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                    }
+                    .padding(.top, 4)
+                }
             }
         }
     }
@@ -256,7 +591,7 @@ struct EstudiantePerfilFreeView: View {
                     
                     Spacer()
                     
-                    Text("2")
+                    Text("\(perfilCompleto?.investigaciones?.count ?? 0)")
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.orange)
@@ -268,20 +603,17 @@ struct EstudiantePerfilFreeView: View {
                         )
                 }
                 
-                VStack(spacing: 16) {
-                    ResearchItem(
-                        icon: "brain.head.profile",
-                        title: "Machine Learning para Análisis Predictivo",
-                        role: "Asistente de Investigación",
-                        period: "Sep 2022 - May 2023"
-                    )
-                    
-                    ResearchItem(
-                        icon: "tree",
-                        title: "Algoritmos de Computación Cuántica",
-                        role: "Colaborador del Proyecto",
-                        period: "Ene 2022 - May 2022"
-                    )
+                if let investigaciones = perfilCompleto?.investigaciones {
+                    VStack(spacing: 16) {
+                        ForEach(investigaciones, id: \.idInvestigacion) { investigacion in
+                            ResearchItem(
+                                icon: "flask",
+                                title: investigacion.titulo,
+                                role: investigacion.rol ?? "Investigador",
+                                period: formatDateRange(investigacion.fechaInicio, investigacion.fechaFin)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -303,22 +635,18 @@ struct EstudiantePerfilFreeView: View {
                         .fontWeight(.bold)
                 }
                 
-                VStack(spacing: 16) {
-                    ExperienceItem(
-                        icon: "chevron.left.forwardslash.chevron.right",
-                        title: "Pasante de Ingeniería de Software",
-                        company: "Tech Solutions Inc.",
-                        period: "Jun 2023 - Ago 2023 · San Francisco, CA",
-                        isVerified: true
-                    )
-                    
-                    ExperienceItem(
-                        icon: "flask",
-                        title: "Asistente de Investigación",
-                        company: "Lab de IA - Universidad Estatal",
-                        period: "Sep 2022 - May 2023 · University City, CA",
-                        isVerified: false
-                    )
+                if let experiencias = perfilCompleto?.experiencias {
+                    VStack(spacing: 16) {
+                        ForEach(experiencias, id: \.idExperiencia) { experiencia in
+                            ExperienceItem(
+                                icon: getExperienceIcon(experiencia.tipo),
+                                title: experiencia.puesto,
+                                company: experiencia.empresa,
+                                period: formatExperiencePeriod(experiencia),
+                                isVerified: false // Por ahora siempre false
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -336,42 +664,50 @@ struct EstudiantePerfilFreeView: View {
                         .fontWeight(.bold)
                 }
                 
-                HStack(alignment: .top, spacing: 16) {
-                    Image(systemName: "graduationcap")
-                        .font(.title2)
-                        .foregroundColor(.orange)
-                        .frame(width: 40, height: 40)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(8)
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Universidad Estatal")
-                            .font(.body)
-                            .fontWeight(.bold)
-                        
-                        Text("Licenciatura en Ciencias de la Computación")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        
-                        Text("2021 - 2025 (Esperado)")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                        
-                        HStack {
-                            Text("Promedio: 3.8/4.0")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.orange)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 4)
-                                        .fill(Color.orange.opacity(0.1))
-                                )
-                            
-                            Spacer()
+                if let formaciones = perfilCompleto?.formaciones {
+                    VStack(spacing: 16) {
+                        ForEach(formaciones, id: \.idFormacion) { formacion in
+                            HStack(alignment: .top, spacing: 16) {
+                                Image(systemName: "graduationcap")
+                                    .font(.title2)
+                                    .foregroundColor(.orange)
+                                    .frame(width: 40, height: 40)
+                                    .background(Color(.systemGray6))
+                                    .cornerRadius(8)
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(formacion.institucion)
+                                        .font(.body)
+                                        .fontWeight(.bold)
+                                    
+                                    Text("\(formacion.grado) en \(formacion.campoEstudio)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    
+                                    Text(formatDateRange(formacion.fechaInicio, formacion.fechaFin))
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                    
+                                    if formacion.esActual {
+                                        HStack {
+                                            Text("En curso")
+                                                .font(.caption2)
+                                                .fontWeight(.bold)
+                                                .foregroundColor(.green)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 4)
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 4)
+                                                        .fill(Color.green.opacity(0.1))
+                                                )
+                                            
+                                            Spacer()
+                                        }
+                                        .padding(.top, 8)
+                                    }
+                                }
+                            }
                         }
-                        .padding(.top, 8)
                     }
                 }
             }
@@ -391,21 +727,31 @@ struct EstudiantePerfilFreeView: View {
                 }
                 
                 VStack(spacing: 12) {
-                    DocumentItem(
-                        icon: "doc.richtext",
-                        iconColor: .red,
-                        title: "CV_Alexandra_Chen_2024.pdf",
-                        subtitle: "Actualizado hace 2 días",
-                        action: "arrow.down.circle"
-                    )
+                    // CVs
+                    if let cvs = perfilCompleto?.cvs {
+                        ForEach(cvs, id: \.idCv) { cv in
+                            DocumentItem(
+                                icon: "doc.richtext",
+                                iconColor: .red,
+                                title: cv.nombre,
+                                subtitle: "Subido \(formatDate(cv.fechaSubida))",
+                                action: "arrow.down.circle"
+                            )
+                        }
+                    }
                     
-                    DocumentItem(
-                        icon: "checkmark.seal",
-                        iconColor: .blue,
-                        title: "AWS Cloud Practitioner",
-                        subtitle: "Certificación · 2024",
-                        action: "arrow.up.right.square"
-                    )
+                    // Certificaciones
+                    if let certificaciones = perfilCompleto?.certificaciones {
+                        ForEach(certificaciones, id: \.idCertificacion) { certificacion in
+                            DocumentItem(
+                                icon: "checkmark.seal",
+                                iconColor: .blue,
+                                title: certificacion.titulo,
+                                subtitle: "\(certificacion.institucion) · \(formatDate(certificacion.fechaObtencion))",
+                                action: "arrow.up.right.square"
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -423,9 +769,11 @@ struct EstudiantePerfilFreeView: View {
                         .fontWeight(.bold)
                 }
                 
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
-                    ForEach(["Python", "JavaScript", "React", "Node.js", "SQL", "Git"], id: \.self) { skill in
-                        SkillTag(text: skill)
+                if let habilidades = perfilCompleto?.habilidades {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
+                        ForEach(habilidades, id: \.idHabilidad) { habilidad in
+                            SkillTag(text: habilidad.nombre)
+                        }
                     }
                 }
             }
@@ -444,9 +792,16 @@ struct EstudiantePerfilFreeView: View {
                         .fontWeight(.bold)
                 }
                 
-                VStack(spacing: 12) {
-                    LanguageItem(flag: "🇺🇸", language: "Inglés", level: "Nativo")
-                    LanguageItem(flag: "🇨🇳", language: "Mandarín", level: "Competente")
+                if let idiomas = perfilCompleto?.idiomas {
+                    VStack(spacing: 12) {
+                        ForEach(idiomas, id: \.idIdioma) { idioma in
+                            LanguageItem(
+                                flag: getLanguageFlag(idioma.nombre),
+                                language: idioma.nombre,
+                                level: idioma.nivel.capitalized
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -853,10 +1208,12 @@ extension View {
 
 struct EstudiantePerfilFreeView_Previews: PreviewProvider {
     static var previews: some View {
-        EstudiantePerfilFreeView()
+        EstudiantePerfilFreeView(idPerfil: 1)
+            .environmentObject(AuthViewModel())
             .preferredColorScheme(.light)
         
-        EstudiantePerfilFreeView()
+        EstudiantePerfilFreeView(idPerfil: 1)
+            .environmentObject(AuthViewModel())
             .preferredColorScheme(.dark)
     }
 }
