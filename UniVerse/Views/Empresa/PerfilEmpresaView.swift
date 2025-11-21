@@ -2,12 +2,57 @@
 // Views/Empresa/PerfilEmpresaView.swift
 import SwiftUI
 
-
 struct PerfilEmpresaView: View {
+    let idPerfil: Int?
+    @EnvironmentObject var authVM: AuthViewModel
+    @StateObject private var perfilVM = PerfilEmpresaViewModel()
+    
+    // Constructor para vista independiente (usado desde ProfileDestinationView)
+    init(idPerfil: Int? = nil) {
+        self.idPerfil = idPerfil
+    }
+    
+    // Estado original del archivo para compatibilidad
+    init() {
+        self.idPerfil = nil
+    }
+    
+    // View content
     @State private var selectedTab = 0
     @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
    
     var body: some View {
+        Group {
+            if perfilVM.isLoading {
+                loadingView
+            } else if perfilVM.showError {
+                errorView
+            } else if perfilVM.hasData {
+                mainContent
+            } else {
+                emptyView
+            }
+        }
+        .background(Color.white)
+        .navigationBarHidden(true)
+        .onAppear {
+            loadProfileIfNeeded()
+        }
+        .alert("Error", isPresented: $perfilVM.showError) {
+            Button("OK") {
+                perfilVM.clearError()
+            }
+            Button("Reintentar") {
+                loadProfileIfNeeded()
+            }
+        } message: {
+            Text(perfilVM.errorMessage ?? "Error desconocido")
+        }
+    }
+    
+    // MARK: - Main Content
+    private var mainContent: some View {
         ScrollView {
             VStack(spacing: 0) {
                 // Header con navegación
@@ -29,8 +74,148 @@ struct PerfilEmpresaView: View {
                 contentSection
             }
         }
+    }
+    
+    // MARK: - Loading View
+    private var loadingView: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .tint(.primaryOrange)
+            Text("Cargando perfil...")
+                .font(.system(size: 14))
+                .foregroundColor(.textSecondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.white)
-        .navigationBarHidden(true)
+    }
+    
+    // MARK: - Error View
+    private var errorView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 48))
+                .foregroundColor(.red)
+            
+            Text("Error al cargar perfil")
+                .font(.headline)
+                .foregroundColor(.black)
+            
+            if let errorMessage = perfilVM.errorMessage {
+                Text(errorMessage)
+                    .font(.body)
+                    .foregroundColor(.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.white)
+    }
+    
+    // MARK: - Empty View
+    private var emptyView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "building.2")
+                .font(.system(size: 48))
+                .foregroundColor(.textSecondary)
+            
+            Text("Perfil no disponible")
+                .font(.headline)
+                .foregroundColor(.black)
+            
+            Text("No se pudo cargar la información de la empresa")
+                .font(.body)
+                .foregroundColor(.textSecondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.white)
+    }
+    
+    // MARK: - Helper Methods
+    private func loadProfileIfNeeded() {
+        guard let profileId = idPerfil else {
+            print("DEBUG PerfilEmpresaView: No profile ID provided, using default data")
+            return
+        }
+        
+        let currentUserId = authVM.currentUser?.perfil?.id
+        
+        Task {
+            await perfilVM.loadPerfilEmpresa(
+                idPerfil: profileId,
+                idPerfilVisitante: currentUserId
+            )
+        }
+    }
+    
+    private func getUbicacionDisplay() -> String {
+        guard let perfilBasico = perfilVM.perfilEmpresa?.perfilBasico else { return "N/A" }
+        
+        let ubicacion = perfilBasico.ubicacion ?? ""
+        let pais = perfilBasico.pais ?? ""
+        
+        if ubicacion.isEmpty && pais.isEmpty {
+            return "N/A"
+        } else if pais.isEmpty {
+            return ubicacion
+        } else if ubicacion.isEmpty {
+            return pais
+        } else {
+            return "\(ubicacion), \(pais)"
+        }
+    }
+    
+    // Vista por defecto para portada
+    private var defaultPortadaView: some View {
+        Rectangle()
+            .fill(
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.orange.opacity(0.8), Color.orange]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .frame(height: 180)
+            .overlay(
+                VStack {
+                    HStack {
+                        Spacer()
+                        Circle()
+                            .fill(Color.white.opacity(0.1))
+                            .frame(width: 60, height: 60)
+                            .offset(x: 20, y: -10)
+                    }
+                    Spacer()
+                    HStack {
+                        Rectangle()
+                            .fill(Color.white.opacity(0.05))
+                            .frame(width: 100, height: 20)
+                            .cornerRadius(10)
+                        Spacer()
+                    }
+                    .offset(x: -10, y: 20)
+                }
+            )
+    }
+    
+    // Vista por defecto para avatar
+    private var defaultAvatarView: some View {
+        Circle()
+            .fill(
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.blue, Color.purple]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .frame(width: 100, height: 100)
+            .overlay(
+                Text(String(perfilVM.displayName.prefix(1)))
+                    .font(.system(size: 36, weight: .bold))
+                    .foregroundColor(.white)
+            )
     }
    
     // MARK: - Header Section
@@ -38,7 +223,7 @@ struct PerfilEmpresaView: View {
         VStack(spacing: 0) {
             HStack {
                 Button(action: {
-                    presentationMode.wrappedValue.dismiss()
+                    dismiss()
                 }) {
                     Image(systemName: "arrow.left")
                         .font(.title2)
@@ -64,58 +249,50 @@ struct PerfilEmpresaView: View {
     private var coverAndLogoSection: some View {
         ZStack(alignment: .bottomLeading) {
             // Imagen de portada
-            Rectangle()
-                .fill(
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color.orange.opacity(0.8), Color.orange]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(height: 180)
-                .overlay(
-                    // Patrón geométrico simulado
-                    VStack {
-                        HStack {
-                            Spacer()
-                            Circle()
-                                .fill(Color.white.opacity(0.1))
-                                .frame(width: 60, height: 60)
-                                .offset(x: 20, y: -10)
-                        }
-                        Spacer()
-                        HStack {
-                            Rectangle()
-                                .fill(Color.white.opacity(0.05))
-                                .frame(width: 100, height: 20)
-                                .cornerRadius(10)
-                            Spacer()
-                        }
-                        .offset(x: -10, y: 20)
+            ZStack {
+                // Siempre mostrar fondo por defecto primero
+                defaultPortadaView
+                
+                // Cargar imagen encima si existe
+                if let fotoPortadaURL = perfilVM.fotoPortadaURL, !fotoPortadaURL.isEmpty {
+                    AsyncImage(url: URL(string: fotoPortadaURL)) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(height: 180)
+                            .clipped()
+                    } placeholder: {
+                        Color.clear
                     }
-                )
+                    .allowsHitTesting(false)
+                }
+            }
            
             // Logo de la empresa
             HStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color.blue, Color.purple]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 100, height: 100)
-                    .overlay(
-                        Text("I")
-                            .font(.system(size: 36, weight: .bold))
-                            .foregroundColor(.white)
-                    )
-                    .overlay(
-                        Circle()
-                            .stroke(Color.white, lineWidth: 4)
-                    )
-                    .offset(y: 50)
+                ZStack {
+                    // Siempre mostrar avatar por defecto primero
+                    defaultAvatarView
+                    
+                    // Cargar imagen encima si existe
+                    if let fotoPerfilURL = perfilVM.fotoPerfilURL, !fotoPerfilURL.isEmpty {
+                        AsyncImage(url: URL(string: fotoPerfilURL)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 100, height: 100)
+                                .clipShape(Circle())
+                        } placeholder: {
+                            Color.clear
+                        }
+                        .allowsHitTesting(false)
+                    }
+                }
+                .overlay(
+                    Circle()
+                        .stroke(Color.white, lineWidth: 4)
+                )
+                .offset(y: 50)
                
                 Spacer()
             }
@@ -127,7 +304,7 @@ struct PerfilEmpresaView: View {
     private var companyInfoSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .center, spacing: 8) {
-                Text("Innovate Corp")
+                Text(perfilVM.displayName)
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.black)
@@ -150,7 +327,7 @@ struct PerfilEmpresaView: View {
                 }
             }
            
-            Text("San Francisco, CA • Tecnología")
+            Text(perfilVM.informacionContacto)
                 .font(.subheadline)
                 .foregroundColor(.textSecondary)
         }
@@ -162,28 +339,51 @@ struct PerfilEmpresaView: View {
     // MARK: - Action Buttons Section
     private var actionButtonsSection: some View {
         HStack(spacing: 12) {
-            Button(action: {}) {
-                Text("Seguir")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color.primaryOrange)
-                    .cornerRadius(8)
-            }
-           
-            Button(action: {}) {
-                Text("Mensaje")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.black)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color.gray.opacity(0.2))
-                    .cornerRadius(8)
+            if !perfilVM.esMiPerfil {
+                Button(action: {
+                    handleFollowToggle()
+                }) {
+                    Text(perfilVM.siguiendoEmpresa ? "Siguiendo" : "Seguir")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(perfilVM.siguiendoEmpresa ? .black : .white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(perfilVM.siguiendoEmpresa ? Color.gray.opacity(0.2) : Color.primaryOrange)
+                        .cornerRadius(8)
+                }
+               
+                Button(action: {
+                    // TODO: Implementar mensaje
+                }) {
+                    Text("Mensaje")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(8)
+                }
+            } else {
+                Button(action: {
+                    // TODO: Implementar editar perfil
+                }) {
+                    Text("Editar Perfil")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(8)
+                }
             }
         }
         .padding(.horizontal, 16)
         .padding(.top, 16)
+    }
+    
+    private func handleFollowToggle() {
+        // TODO: Implementar follow/unfollow
+        perfilVM.actualizarSeguimiento(siguiendo: !perfilVM.siguiendoEmpresa)
     }
    
     // MARK: - Tab Section
@@ -225,13 +425,13 @@ struct PerfilEmpresaView: View {
         VStack(spacing: 20) {
             // Información de la empresa
             VStack(alignment: .leading, spacing: 16) {
-                Text("Acerca de Innovate Corp")
+                Text("Acerca de \(perfilVM.displayName)")
                     .font(.headline)
                     .fontWeight(.bold)
                     .foregroundColor(.black)
                
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Somos una empresa tecnológica de vanguardia dedicada a construir el futuro de la inteligencia artificial. Nuestra misión es empoderar a empresas e individuos a través de soluciones de software innovadoras.")
+                    Text(perfilVM.descripcionEmpresa)
                         .font(.body)
                         .foregroundColor(.textSecondary)
                    
@@ -248,25 +448,42 @@ struct PerfilEmpresaView: View {
                     GridItem(.flexible()),
                     GridItem(.flexible())
                 ], spacing: 16) {
-                    StatCard2(icon: "person.3.fill", value: "500+", label: "Empleados")
-                    StatCard2(icon: "calendar", value: "2015", label: "Fundada")
-                    StatCard2(icon: "location.fill", value: "Centro SF", label: "Oficina Principal")
-                    StatCard2(icon: "phone.fill", value: "+1 (555) 123-4567", label: "Contacto")
+                    if let tamano = perfilVM.tamanoEmpresaTexto {
+                        StatCard2(icon: "person.3.fill", value: tamano, label: "Empleados")
+                    }
+                    if let anio = perfilVM.anioFundacionTexto {
+                        StatCard2(icon: "calendar", value: anio, label: "Fundada")
+                    }
+                    StatCard2(icon: "location.fill", value: getUbicacionDisplay(), label: "Ubicación")
+                    StatCard2(icon: "briefcase.fill", value: perfilVM.ofertasActivasTexto, label: "Ofertas Activas")
                 }
                 .padding(.top, 8)
                
                 // Información de contacto
                 VStack(alignment: .leading, spacing: 12) {
-                    ContactRowEmpresa(icon: "location.fill", text: "123 Innovation Drive, Suite 400, San Francisco, CA 94105")
-                    ContactRowEmpresa(icon: "clock.fill", text: "Lunes - Viernes: 9:00 AM - 6:00 PM PST")
+                    if let ubicacion = perfilVM.perfilEmpresa?.perfilBasico?.ubicacion, !ubicacion.isEmpty {
+                        let pais = perfilVM.perfilEmpresa?.perfilBasico?.pais ?? ""
+                        let ubicacionCompleta = pais.isEmpty ? ubicacion : "\(ubicacion), \(pais)"
+                        ContactRowEmpresa(icon: "location.fill", text: ubicacionCompleta)
+                    }
+                    
+                    if let telefono = perfilVM.perfilEmpresa?.perfilBasico?.telefono, !telefono.isEmpty {
+                        ContactRowEmpresa(icon: "phone.fill", text: telefono)
+                    }
                    
-                    Button(action: {}) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "link")
-                                .foregroundColor(.primaryOrange)
-                            Text("innovatecorp.com")
-                                .fontWeight(.semibold)
-                                .foregroundColor(.primaryOrange)
+                    if let sitioWeb = perfilVM.perfilEmpresa?.perfilBasico?.sitioWeb, !sitioWeb.isEmpty {
+                        Button(action: {
+                            if let url = URL(string: sitioWeb.hasPrefix("http") ? sitioWeb : "https://\(sitioWeb)") {
+                                UIApplication.shared.open(url)
+                            }
+                        }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "link")
+                                    .foregroundColor(.primaryOrange)
+                                Text(sitioWeb)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.primaryOrange)
+                            }
                         }
                     }
                 }
@@ -303,26 +520,24 @@ struct PerfilEmpresaView: View {
             }
             .padding(.horizontal, 16)
            
-            VStack(spacing: 12) {
-                JobCardEmpresa(
-                    title: "Pasante de Ingeniería de Software",
-                    location: "San Francisco, CA • Pasantía",
-                    description: "Únete a nuestro equipo central de ingeniería para trabajar en productos de IA de próxima generación. Obtén experiencia práctica con modelos de machine learning e infraestructura en la nube."
-                )
-               
-                JobCardEmpresa(
-                    title: "Diseñador de Producto",
-                    location: "Remoto • Tiempo completo",
-                    description: "Da forma a la experiencia del usuario de nuestros productos principales. Serás responsable de todo el proceso de diseño, desde la investigación hasta los prototipos de alta fidelidad."
-                )
-               
-                JobCardEmpresa(
-                    title: "Pasante de Ciencia de Datos",
-                    location: "San Francisco, CA • Pasantía",
-                    description: "Únete a nuestro equipo de data science para analizar grandes volúmenes de datos y desarrollar modelos predictivos. Ideal para estudiantes de ciencias de datos o estadística."
-                )
+            if perfilVM.tieneOfertas {
+                VStack(spacing: 12) {
+                    ForEach(perfilVM.ofertasRecientes, id: \.idOferta) { oferta in
+                        JobCardEmpresa(
+                            title: oferta.titulo,
+                            location: [oferta.ubicacion, oferta.tipoOferta].compactMap { $0 }.joined(separator: " • "),
+                            description: oferta.descripcion
+                        )
+                    }
+                }
+                .padding(.horizontal, 16)
+            } else {
+                Text("No hay ofertas disponibles en este momento")
+                    .font(.body)
+                    .foregroundColor(.textSecondary)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 20)
             }
-            .padding(.horizontal, 16)
         }
     }
    

@@ -200,8 +200,13 @@ struct FeedView: View {
             HStack(spacing: 12) {
                 // Profile Image - Clickeable
                 NavigationLink(
-                    destination: EstudiantePerfilFreeView(idPerfil: feedItem.idPerfil)
-                        .environmentObject(authVM)
+                    destination: ProfileDestinationView(
+                        idPerfil: feedItem.idPerfil,
+                        nombreCompleto: feedItem.nombreCompleto,
+                        fotoPerfil: feedItem.fotoPerfil,
+                        esEmpresa: feedItem.esEmpresa
+                    )
+                    .environmentObject(authVM)
                 ) {
                     profileImageView(feedItem)
                 }
@@ -210,8 +215,13 @@ struct FeedView: View {
                     HStack(spacing: 8) {
                         // Nombre - Clickeable
                         NavigationLink(
-                            destination: EstudiantePerfilFreeView(idPerfil: feedItem.idPerfil)
-                                .environmentObject(authVM)
+                            destination: ProfileDestinationView(
+                                idPerfil: feedItem.idPerfil,
+                                nombreCompleto: feedItem.nombreCompleto,
+                                fotoPerfil: feedItem.fotoPerfil,
+                                esEmpresa: feedItem.esEmpresa
+                            )
+                            .environmentObject(authVM)
                         ) {
                             Text(feedItem.nombreCompleto)
                                 .font(.system(size: 15, weight: .bold))
@@ -792,7 +802,36 @@ struct FeedView: View {
     }
     
 }
-    #Preview {
+
+// MARK: - Profile Destination View
+struct ProfileDestinationView: View {
+    let idPerfil: Int
+    let nombreCompleto: String
+    let fotoPerfil: String?
+    let esEmpresa: Bool
+    
+    @EnvironmentObject var authVM: AuthViewModel
+    
+    var body: some View {
+        destinationView
+    }
+    
+    @ViewBuilder
+    private var destinationView: some View {
+        if esEmpresa {
+            PerfilEmpresaView(idPerfil: idPerfil)
+                .environmentObject(authVM)
+        } else {
+            EstudiantePerfilFreeView(idPerfil: idPerfil)
+                .environmentObject(authVM)
+        }
+    }
+    
+
+}
+
+// MARK: - Preview
+#Preview {
     NavigationView {
         FeedView()
             .environmentObject(AuthViewModel())

@@ -186,11 +186,14 @@ class FeedViewModel: ObservableObject {
         }
     }
     
-    /// Incrementa las vistas de un anuncio
+    /// Incrementa el contador de vistas de un anuncio
     /// - Parameter feedItem: Item del feed (anuncio) a marcar como visto
     func markAnuncioAsViewed(_ feedItem: FeedItem) async {
         guard feedItem.esAnuncio else { return }
         
+        // TODO: Implementar cuando el RPC esté disponible
+        // Por ahora comentado para evitar errores
+        /*
         do {
             try await feedService.incrementVistaAnuncio(idAnuncio: feedItem.id)
             // Actualizar contador local si es necesario
@@ -199,6 +202,7 @@ class FeedViewModel: ObservableObject {
             // Error silencioso para las vistas, no interrumpir UX
             print("Error al incrementar vista: \(error.localizedDescription)")
         }
+        */
     }
     
     /// Limpia el mensaje de error
