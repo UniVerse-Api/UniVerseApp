@@ -203,27 +203,7 @@ struct FeedView: View {
                     destination: EstudiantePerfilFreeView(idPerfil: feedItem.idPerfil)
                         .environmentObject(authVM)
                 ) {
-                    AsyncImage(url: URL(string: feedItem.fotoPerfil ?? "")) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [.blue, .purple]),
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .overlay(
-                                Text(String(feedItem.nombreCompleto.prefix(2)).uppercased())
-                                    .font(.system(size: 18, weight: .bold))
-                                    .foregroundColor(.white)
-                            )
-                    }
-                    .frame(width: 48, height: 48)
-                    .clipShape(Circle())
+                    profileImageView(feedItem)
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
@@ -247,6 +227,13 @@ struct FeedView: View {
                                 .background(Color.primaryOrange.opacity(0.2))
                                 .foregroundColor(.primaryOrange)
                                 .cornerRadius(4)
+                        }
+                        
+                        // Badge de empresa verificada
+                        if feedItem.esEmpresa {
+                            Image(systemName: "checkmark.seal.fill")
+                                .font(.system(size: 12))
+                                .foregroundColor(feedItem.esPremium ? .yellow : .blue)
                         }
                         
                         if feedItem.esSeguido {
@@ -523,6 +510,80 @@ struct FeedView: View {
     }
     
     // MARK: - Helper Methods
+    
+    /// Vista del avatar de perfil con efectos premium
+    private func profileImageView(_ feedItem: FeedItem) -> some View {
+        ZStack {
+            // Premium gradient border - SIEMPRE mostrar si es premium
+            if feedItem.esPremium {
+                Circle()
+                    .stroke(
+                        LinearGradient(
+                            colors: [.blue, .purple, .indigo],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 2
+                    )
+                    .frame(width: 52, height: 52)
+                    .blur(radius: 0.5)
+                    .opacity(0.8)
+            }
+            
+            AsyncImage(url: URL(string: feedItem.fotoPerfil ?? "")) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                Circle()
+                    .fill(
+                        feedItem.esPremium ?
+                        LinearGradient(
+                            gradient: Gradient(colors: [.blue, .purple]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ) :
+                        LinearGradient(
+                            gradient: Gradient(colors: [.gray, .gray]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay(
+                        Text(String(feedItem.nombreCompleto.prefix(2)).uppercased())
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.white)
+                    )
+            }
+            .frame(width: 48, height: 48)
+            .clipShape(Circle())
+            
+            // Premium crown - SIEMPRE mostrar si es premium
+            if feedItem.esPremium {
+                VStack {
+                    HStack {
+                        Spacer()
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 16, height: 16)
+                            .overlay(
+                                Image(systemName: "crown.fill")
+                                    .font(.system(size: 8))
+                                    .foregroundColor(.white)
+                            )
+                    }
+                    Spacer()
+                }
+                .frame(width: 48, height: 48)
+            }
+        }
+    }
     
     /// Determina si una publicación pertenece al usuario actual
     /// - Parameter feedItem: Item del feed a verificar

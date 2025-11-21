@@ -26,7 +26,7 @@ struct EstudiantePerfilFreeView: View {
                                     .font(.title2)
                                     .foregroundColor(.primary)
                                 
-                                Text("Atrás")
+                                Text("Atrá")
                                     .font(.body)
                                     .fontWeight(.medium)
                                     .foregroundColor(.primary)
@@ -172,6 +172,9 @@ struct EstudiantePerfilFreeView: View {
                             if let formaciones = perfil.formaciones, !formaciones.isEmpty {
                                 educationSection
                             }
+                            if let certificaciones = perfil.certificaciones, !certificaciones.isEmpty {
+                                certificationsSection
+                            }
                             if let cvs = perfil.cvs, !cvs.isEmpty {
                                 documentsSection
                             }
@@ -184,19 +187,64 @@ struct EstudiantePerfilFreeView: View {
                             // recommendationsSection
                         }
                         .padding(.horizontal, 16)
-                        .padding(.bottom, 100) // Space for bottom nav
+                        .padding(.bottom, 20) // Reduced padding since no bottom nav
                         .background(Color(.systemGray6))
                     }
                 }
                 .navigationBarHidden(true)
-                
-                // Bottom Navigation
-                bottomNavigation
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
         .task {
             await loadPerfil()
+        }
+    }
+    
+    // MARK: - Toggle Seguir Function
+    private func toggleSeguir() async {
+        guard let currentUser = authVM.currentUser,
+              let perfilSeguidor = currentUser.perfil,
+              let perfilCompleto = perfilCompleto else {
+            return
+        }
+        
+        do {
+            struct ToggleSeguirParams: Codable {
+                let p_id_seguidor: Int
+                let p_id_seguido: Int
+            }
+            
+            let params = ToggleSeguirParams(
+                p_id_seguidor: perfilSeguidor.id,
+                p_id_seguido: idPerfil
+            )
+            
+            let response = try await SupabaseManager.shared.client
+                .rpc("toggle_seguir", params: params)
+                .execute()
+            
+            struct ToggleSeguirResponse: Codable {
+                let success: Bool
+                let message: String
+                let esta_siguiendo: Bool
+                let total_seguidores: Int
+                let total_seguidos: Int
+            }
+            
+            let result = try JSONDecoder().decode([ToggleSeguirResponse].self, from: response.data)
+            
+            if let toggleResult = result.first, toggleResult.success {
+                await MainActor.run {
+                    // Actualizar el estado de seguimiento
+                    self.perfilCompleto?.estadoSeguimiento?.sigoAEstePerfil = toggleResult.esta_siguiendo
+                    
+                    // Actualizar el contador de seguidores
+                    self.perfilCompleto?.estadisticas?.seguidores = toggleResult.total_seguidores
+                }
+            }
+            
+        } catch {
+            print("Error al togglear seguir: \(error.localizedDescription)")
         }
     }
     
@@ -398,22 +446,69 @@ struct EstudiantePerfilFreeView: View {
             
             // Profile Info
             HStack(alignment: .top, spacing: 16) {
-                // Profile Image
-                AsyncImage(url: URL(string: perfilCompleto?.perfilBasico?.fotoPerfil ?? "")) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Circle()
-                        .fill(Color(.systemGray4))
-                        .overlay(
-                            Image(systemName: "person.fill")
-                                .font(.title)
-                                .foregroundColor(.white)
-                        )
+                // Profile Image with Premium Effect
+                ZStack {
+                    let isPremium = perfilCompleto?.suscripcionActiva?.estatus == "activo"
+                    
+                    if isPremium {
+                        // Premium gradient border
+                        Circle()
+                            .stroke(
+                                LinearGradient(
+                                    colors: [.blue, .purple, .indigo],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 3
+                            )
+                            .frame(width: 102, height: 102)
+                            .blur(radius: 1)
+                            .opacity(0.8)
+                    }
+                    
+                    AsyncImage(url: URL(string: perfilCompleto?.perfilBasico?.fotoPerfil ?? "")) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Circle()
+                            .fill(Color(.systemGray4))
+                            .overlay(
+                                Image(systemName: "person.fill")
+                                    .font(.title)
+                                    .foregroundColor(.white)
+                            )
+                    }
+                    .frame(width: 96, height: 96)
+                    .clipShape(Circle())
+                    
+                    // Premium badge
+                    if isPremium {
+                        VStack {
+                            HStack {
+                                Spacer()
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [.blue, .purple],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 24, height: 24)
+                                    .overlay(
+                                        Image(systemName: "crown.fill")
+                                            .font(.caption)
+                                            .foregroundColor(.white)
+                                    )
+                                    .shadow(radius: 2)
+                                    .offset(x: 4, y: -4)
+                            }
+                            Spacer()
+                        }
+                        .frame(width: 96, height: 96)
+                    }
                 }
-                .frame(width: 96, height: 96)
-                .clipShape(Circle())
                 
                 // Profile Details
                 VStack(alignment: .leading, spacing: 4) {
@@ -431,18 +526,20 @@ struct EstudiantePerfilFreeView: View {
                     }
                     
                     HStack {
+                        let isPremium = perfilCompleto?.suscripcionActiva?.estatus == "activo"
+                        
                         Text("ESTUDIANTE")
                             .font(.caption)
                             .fontWeight(.bold)
-                            .foregroundColor(.orange)
+                            .foregroundColor(isPremium ? .orange : .blue)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
                             .background(
                                 RoundedRectangle(cornerRadius: 4)
-                                    .fill(Color.orange.opacity(0.1))
+                                    .fill((isPremium ? Color.orange : Color.blue).opacity(0.1))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 4)
-                                            .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                                            .stroke((isPremium ? Color.orange : Color.blue).opacity(0.3), lineWidth: 1)
                                     )
                             )
                         
@@ -475,20 +572,40 @@ struct EstudiantePerfilFreeView: View {
             
             // Action Buttons
             HStack(spacing: 12) {
-                Button("Seguir") {}
-                    .buttonStyle(PrimaryButtonStyle())
+                let esMiPerfil = perfilCompleto?.estadoSeguimiento?.esMiPerfil ?? false
+                let sigoAPerfil = perfilCompleto?.estadoSeguimiento?.sigoAEstePerfil ?? false
+                
+                if !esMiPerfil {
+                    if sigoAPerfil {
+                        Button("Siguiendo") {
+                            Task {
+                                await toggleSeguir()
+                            }
+                        }
+                        .buttonStyle(FollowingButtonStyle())
+                    } else {
+                        Button("Seguir") {
+                            Task {
+                                await toggleSeguir()
+                            }
+                        }
+                        .buttonStyle(PrimaryButtonStyle())
+                    }
+                }
                 
                 Button("Sitio web") {}
                     .buttonStyle(SecondaryButtonStyle())
                 
-                Button(action: {}) {
-                    Image(systemName: "bookmark")
-                        .font(.body)
-                        .foregroundColor(.primary)
+                if !esMiPerfil {
+                    Button(action: {}) {
+                        Image(systemName: "bookmark")
+                            .font(.body)
+                            .foregroundColor(.primary)
+                    }
+                    .frame(width: 40, height: 40)
+                    .background(Color(.systemGray5))
+                    .cornerRadius(8)
                 }
-                .frame(width: 40, height: 40)
-                .background(Color(.systemGray5))
-                .cornerRadius(8)
             }
             .padding(.horizontal, 16)
         }
@@ -540,40 +657,45 @@ struct EstudiantePerfilFreeView: View {
     
     // MARK: - About Section
     private var aboutSection: some View {
-        ProfileSectionCard {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Sobre mí")
-                    .font(.headline)
-                    .fontWeight(.bold)
-                
-                Text(perfilCompleto?.perfilBasico?.biografia ?? "Sin información disponible")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .lineSpacing(4)
-                
-                if let telefono = perfilCompleto?.perfilBasico?.telefono {
-                    HStack {
-                        Image(systemName: "phone.fill")
-                            .foregroundColor(.orange)
-                        Text(telefono)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.top, 8)
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Sobre mí")
+                .font(.headline)
+                .fontWeight(.bold)
+            
+            Text(perfilCompleto?.perfilBasico?.biografia ?? "Sin información disponible")
+                .font(.body)
+                .foregroundColor(.secondary)
+                .lineSpacing(4)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            
+            if let telefono = perfilCompleto?.perfilBasico?.telefono {
+                HStack {
+                    Image(systemName: "phone.fill")
+                        .foregroundColor(.orange)
+                    Text(telefono)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
-                
-                if let sitioWeb = perfilCompleto?.perfilBasico?.sitioWeb {
-                    HStack {
-                        Image(systemName: "link")
-                            .foregroundColor(.orange)
-                        Text(sitioWeb)
-                            .font(.caption)
-                            .foregroundColor(.blue)
-                    }
-                    .padding(.top, 4)
+                .padding(.top, 8)
+            }
+            
+            if let sitioWeb = perfilCompleto?.perfilBasico?.sitioWeb {
+                HStack {
+                    Image(systemName: "link")
+                        .foregroundColor(.orange)
+                    Text(sitioWeb)
+                        .font(.caption)
+                        .foregroundColor(.blue)
                 }
+                .padding(.top, 4)
             }
         }
+        .padding(.top, 24)
+        .padding(.bottom, 16)
+        .padding(.horizontal, 16)
+        .frame(maxWidth: .infinity)
+        .background(Color(UIColor.systemBackground))
+        .cornerRadius(12)
     }
     
     // MARK: - Research Section
@@ -583,7 +705,7 @@ struct EstudiantePerfilFreeView: View {
                 HStack {
                     HStack(spacing: 8) {
                         Image(systemName: "flask")
-                            .foregroundColor(.orange)
+                            .foregroundColor(.green)
                         Text("Investigaciones")
                             .font(.headline)
                             .fontWeight(.bold)
@@ -594,12 +716,12 @@ struct EstudiantePerfilFreeView: View {
                     Text("\(perfilCompleto?.investigaciones?.count ?? 0)")
                         .font(.caption)
                         .fontWeight(.bold)
-                        .foregroundColor(.orange)
+                        .foregroundColor(.green)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(
                             RoundedRectangle(cornerRadius: 4)
-                                .fill(Color.orange.opacity(0.1))
+                                .fill(Color.green.opacity(0.1))
                         )
                 }
                 
@@ -619,7 +741,7 @@ struct EstudiantePerfilFreeView: View {
         }
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.orange.opacity(0.3), lineWidth: 2)
+                .stroke(Color.green.opacity(0.3), lineWidth: 2)
         )
     }
     
@@ -629,7 +751,7 @@ struct EstudiantePerfilFreeView: View {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 8) {
                     Image(systemName: "briefcase")
-                        .foregroundColor(.orange)
+                        .foregroundColor(.blue)
                     Text("Experiencia & Pasantías")
                         .font(.headline)
                         .fontWeight(.bold)
@@ -667,46 +789,12 @@ struct EstudiantePerfilFreeView: View {
                 if let formaciones = perfilCompleto?.formaciones {
                     VStack(spacing: 16) {
                         ForEach(formaciones, id: \.idFormacion) { formacion in
-                            HStack(alignment: .top, spacing: 16) {
-                                Image(systemName: "graduationcap")
-                                    .font(.title2)
-                                    .foregroundColor(.orange)
-                                    .frame(width: 40, height: 40)
-                                    .background(Color(.systemGray6))
-                                    .cornerRadius(8)
-                                
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(formacion.institucion)
-                                        .font(.body)
-                                        .fontWeight(.bold)
-                                    
-                                    Text("\(formacion.grado) en \(formacion.campoEstudio)")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    
-                                    Text(formatDateRange(formacion.fechaInicio, formacion.fechaFin))
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                    
-                                    if formacion.esActual {
-                                        HStack {
-                                            Text("En curso")
-                                                .font(.caption2)
-                                                .fontWeight(.bold)
-                                                .foregroundColor(.green)
-                                                .padding(.horizontal, 8)
-                                                .padding(.vertical, 4)
-                                                .background(
-                                                    RoundedRectangle(cornerRadius: 4)
-                                                        .fill(Color.green.opacity(0.1))
-                                                )
-                                            
-                                            Spacer()
-                                        }
-                                        .padding(.top, 8)
-                                    }
-                                }
-                            }
+                            EducationItem(
+                                institution: formacion.institucion,
+                                degree: "\(formacion.grado) en \(formacion.campoEstudio)",
+                                period: formatDateRange(formacion.fechaInicio, formacion.fechaFin),
+                                isActive: formacion.esActual
+                            )
                         }
                     }
                 }
@@ -721,7 +809,7 @@ struct EstudiantePerfilFreeView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "doc.text")
                         .foregroundColor(.orange)
-                    Text("Documentos & Certificaciones")
+                    Text("Documentos")
                         .font(.headline)
                         .fontWeight(.bold)
                 }
@@ -739,22 +827,56 @@ struct EstudiantePerfilFreeView: View {
                             )
                         }
                     }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Certifications Section
+    private var certificationsSection: some View {
+        ProfileSectionCard {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.seal.fill")
+                            .foregroundColor(.orange)
+                        Text("Certificaciones")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                    }
                     
-                    // Certificaciones
-                    if let certificaciones = perfilCompleto?.certificaciones {
+                    Spacer()
+                    
+                    Text("\(perfilCompleto?.certificaciones?.count ?? 0)")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.orange)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.orange.opacity(0.1))
+                        )
+                }
+                
+                if let certificaciones = perfilCompleto?.certificaciones {
+                    VStack(spacing: 12) {
                         ForEach(certificaciones, id: \.idCertificacion) { certificacion in
-                            DocumentItem(
-                                icon: "checkmark.seal",
-                                iconColor: .blue,
+                            CertificationItem(
                                 title: certificacion.titulo,
-                                subtitle: "\(certificacion.institucion) · \(formatDate(certificacion.fechaObtencion))",
-                                action: "arrow.up.right.square"
+                                institution: certificacion.institucion,
+                                date: formatDate(certificacion.fechaObtencion),
+                                imageUrl: certificacion.imagen
                             )
                         }
                     }
                 }
             }
         }
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.blue.opacity(0.3), lineWidth: 2)
+        )
     }
     
     // MARK: - Skills Section
@@ -828,28 +950,7 @@ struct EstudiantePerfilFreeView: View {
             }
         }
     }
-    
-    // MARK: - Bottom Navigation
-    private var bottomNavigation: some View {
-        HStack {
-            NavItem(icon: "house", title: "Home", isSelected: false)
-            NavItem(icon: "person.2", title: "Network", isSelected: false)
-            NavItem(icon: "briefcase", title: "Jobs", isSelected: false)
-            NavItem(icon: "person.circle.fill", title: "Profile", isSelected: true)
-        }
-        .padding(.vertical, 8)
-        .background(
-            Color(UIColor.systemBackground)
-                .opacity(0.95)
-                .background(.ultraThinMaterial)
-        )
-        .overlay(
-            Rectangle()
-                .fill(Color(.systemGray4))
-                .frame(height: 1),
-            alignment: .top
-        )
-    }
+
 }
 
 // MARK: - Supporting Views
@@ -857,17 +958,19 @@ struct EstudiantePerfilFreeView: View {
 struct StatView: View {
     let number: String
     let label: String
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(spacing: 4) {
             Text(number)
                 .font(.title2)
                 .fontWeight(.bold)
+            
             Text(label)
                 .font(.caption)
                 .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -921,9 +1024,9 @@ struct ResearchItem: View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
                 .font(.title2)
-                .foregroundColor(.orange)
+                .foregroundColor(.green)
                 .frame(width: 40, height: 40)
-                .background(Color.orange.opacity(0.1))
+                .background(Color.green.opacity(0.1))
                 .cornerRadius(8)
             
             VStack(alignment: .leading, spacing: 4) {
@@ -963,7 +1066,7 @@ struct ExperienceItem: View {
         HStack(alignment: .top, spacing: 16) {
             Image(systemName: icon)
                 .font(.title3)
-                .foregroundColor(.orange)
+                .foregroundColor(.blue)
                 .frame(width: 40, height: 40)
                 .background(Color(.systemGray6))
                 .cornerRadius(8)
@@ -988,6 +1091,57 @@ struct ExperienceItem: View {
                     
                     if isVerified {
                         Text("VERIFICADO")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.green)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.green.opacity(0.1))
+                            )
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct EducationItem: View {
+    let institution: String
+    let degree: String
+    let period: String
+    let isActive: Bool
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 16) {
+            Image(systemName: "graduationcap")
+                .font(.title3)
+                .foregroundColor(.orange)
+                .frame(width: 40, height: 40)
+                .background(Color(.systemGray6))
+                .cornerRadius(8)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(institution)
+                            .font(.body)
+                            .fontWeight(.bold)
+                        
+                        Text(degree)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        Text(period)
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    if isActive {
+                        Text("EN CURSO")
                             .font(.caption2)
                             .fontWeight(.bold)
                             .foregroundColor(.green)
@@ -1060,6 +1214,76 @@ struct SkillTag: View {
                             .stroke(Color.blue.opacity(0.3), lineWidth: 1)
                     )
             )
+    }
+}
+
+struct CertificationItem: View {
+    let title: String
+    let institution: String
+    let date: String
+    let imageUrl: String
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            // Certification Image/Icon
+            AsyncImage(url: URL(string: imageUrl)) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+            } placeholder: {
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.title2)
+                    .foregroundColor(.blue)
+            }
+            .frame(width: 48, height: 48)
+            .background(Color(.systemGray6))
+            .cornerRadius(8)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.body)
+                    .fontWeight(.bold)
+                    .lineLimit(2)
+                
+                Text(institution)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                HStack {
+                    Text("Obtenido: \(date)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    
+                    Spacer()
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                        Text("Verificado")
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.green)
+                    }
+                }
+                .padding(.top, 4)
+            }
+            
+            Spacer()
+            
+            Button(action: {}) {
+                Image(systemName: "arrow.up.right.square")
+                    .font(.title3)
+                    .foregroundColor(.blue)
+            }
+        }
+        .padding(12)
+        .background(Color(.systemGray6))
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+        )
     }
 }
 
@@ -1146,25 +1370,7 @@ struct RecommendationCard: View {
     }
 }
 
-struct NavItem: View {
-    let icon: String
-    let title: String
-    let isSelected: Bool
-    
-    var body: some View {
-        VStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.body)
-                .foregroundColor(isSelected ? .orange : .secondary)
-            
-            Text(title)
-                .font(.caption2)
-                .fontWeight(isSelected ? .bold : .medium)
-                .foregroundColor(isSelected ? .orange : .secondary)
-        }
-        .frame(maxWidth: .infinity)
-    }
-}
+
 
 // MARK: - Button Styles
 
@@ -1189,6 +1395,20 @@ struct SecondaryButtonStyle: ButtonStyle {
             .padding(.vertical, 12)
             .background(Color(.systemGray5))
             .foregroundColor(.primary)
+            .font(.body)
+            .fontWeight(.bold)
+            .cornerRadius(8)
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+    }
+}
+
+struct FollowingButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(Color.green)
+            .foregroundColor(.white)
             .font(.body)
             .fontWeight(.bold)
             .cornerRadius(8)

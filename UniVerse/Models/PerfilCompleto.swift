@@ -7,8 +7,8 @@ struct PerfilCompletoResponse: Codable {
     let message: String?
     let perfilBasico: PerfilBasico?
     let perfilEstudiante: PerfilEstudiantePerfil?
-    let estadisticas: Estadisticas?
-    let estadoSeguimiento: EstadoSeguimiento?
+    var estadisticas: Estadisticas?
+    var estadoSeguimiento: EstadoSeguimiento?
     let investigaciones: [Investigacion]?
     let experiencias: [ExperienciaPerfil]?
     let formaciones: [FormacionPerfil]?
@@ -92,7 +92,7 @@ struct PerfilEstudiantePerfil: Codable {
 
 // MARK: - Estadísticas
 struct Estadisticas: Codable {
-    let seguidores: Int
+    var seguidores: Int
     let siguiendo: Int
     let publicaciones: Int
 }
@@ -101,7 +101,7 @@ struct Estadisticas: Codable {
 struct EstadoSeguimiento: Codable {
     let meSigue: Bool
     let esMiPerfil: Bool
-    let sigoAEstePerfil: Bool
+    var sigoAEstePerfil: Bool
     
     enum CodingKeys: String, CodingKey {
         case meSigue = "me_sigue"

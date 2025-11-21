@@ -16,6 +16,8 @@ struct FeedItem: Identifiable, Codable, Equatable {
     let esSeguido: Bool
     let esFavorito: Bool
     let esDestacado: Bool
+    let esPremium: Bool // Si el creador del post tiene plan premium
+    let esEmpresa: Bool // Si el creador del post es empresa
     let vistaContador: Int?
     let fechaInicio: Date?
     let fechaFin: Date?
@@ -55,6 +57,8 @@ struct FeedItem: Identifiable, Codable, Equatable {
         case esSeguido = "es_seguido"
         case esFavorito = "es_favorito"
         case esDestacado = "es_destacado"
+        case esPremium = "es_premium"
+        case esEmpresa = "es_empresa"
         case vistaContador = "vista_contador"
         case fechaInicio = "fecha_inicio"
         case fechaFin = "fecha_fin"
@@ -100,6 +104,8 @@ struct FeedItem: Identifiable, Codable, Equatable {
         esSeguido = try container.decode(Bool.self, forKey: .esSeguido)
         esFavorito = try container.decode(Bool.self, forKey: .esFavorito)
         esDestacado = try container.decode(Bool.self, forKey: .esDestacado)
+        esPremium = try container.decode(Bool.self, forKey: .esPremium)
+        esEmpresa = try container.decode(Bool.self, forKey: .esEmpresa)
         vistaContador = try container.decodeIfPresent(Int.self, forKey: .vistaContador)
         
         // Fechas opcionales para anuncios
