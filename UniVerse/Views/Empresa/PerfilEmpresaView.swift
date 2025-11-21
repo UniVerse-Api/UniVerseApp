@@ -29,7 +29,7 @@ struct PerfilEmpresaView: View {
                 contentSection
             }
         }
-        .background(Color.backgroundDark)
+        .background(Color.white)
         .navigationBarHidden(true)
     }
    
@@ -42,7 +42,7 @@ struct PerfilEmpresaView: View {
                 }) {
                     Image(systemName: "arrow.left")
                         .font(.title2)
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                 }
                
                 Spacer()
@@ -50,13 +50,13 @@ struct PerfilEmpresaView: View {
                 Button(action: {}) {
                     Image(systemName: "ellipsis")
                         .font(.title2)
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                         .rotationEffect(.degrees(90))
                 }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(Color.backgroundDark.opacity(0.8))
+            .background(Color.white.opacity(0.95))
         }
     }
    
@@ -113,7 +113,7 @@ struct PerfilEmpresaView: View {
                     )
                     .overlay(
                         Circle()
-                            .stroke(Color.backgroundDark, lineWidth: 4)
+                            .stroke(Color.white, lineWidth: 4)
                     )
                     .offset(y: 50)
                
@@ -130,7 +130,7 @@ struct PerfilEmpresaView: View {
                 Text("Innovate Corp")
                     .font(.title2)
                     .fontWeight(.bold)
-                    .foregroundColor(.white)
+                    .foregroundColor(.black)
                
                 // Badge Premium
                 ZStack {
@@ -175,10 +175,10 @@ struct PerfilEmpresaView: View {
             Button(action: {}) {
                 Text("Mensaje")
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.black)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
-                    .background(Color.gray.opacity(0.3))
+                    .background(Color.gray.opacity(0.2))
                     .cornerRadius(8)
             }
         }
@@ -190,11 +190,11 @@ struct PerfilEmpresaView: View {
     private var tabSection: some View {
         VStack(spacing: 0) {
             HStack {
-                TabButton(title: "Acerca de", isSelected: selectedTab == 0) {
+                TabButtond(title: "Acerca de", isSelected: selectedTab == 0) {
                     selectedTab = 0
                 }
                
-                TabButton(title: "Publicaciones", isSelected: selectedTab == 1) {
+                TabButtond(title: "Publicaciones", isSelected: selectedTab == 1) {
                     selectedTab = 1
                 }
             }
@@ -204,7 +204,7 @@ struct PerfilEmpresaView: View {
                 .frame(height: 1)
         }
         .padding(.top, 20)
-        .background(Color.backgroundDark)
+        .background(Color.white)
     }
    
     // MARK: - Content Section
@@ -217,7 +217,7 @@ struct PerfilEmpresaView: View {
             }
         }
         .padding(.top, 20)
-        .background(Color.backgroundLight.opacity(0.05))
+        .background(Color.white)
     }
    
     // MARK: - About Section
@@ -228,7 +228,7 @@ struct PerfilEmpresaView: View {
                 Text("Acerca de Innovate Corp")
                     .font(.headline)
                     .fontWeight(.bold)
-                    .foregroundColor(.white)
+                    .foregroundColor(.black)
                
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Somos una empresa tecnológica de vanguardia dedicada a construir el futuro de la inteligencia artificial. Nuestra misión es empoderar a empresas e individuos a través de soluciones de software innovadoras.")
@@ -273,8 +273,9 @@ struct PerfilEmpresaView: View {
                 .padding(.top, 8)
             }
             .padding(16)
-            .background(Color.cardBackground)
+            .background(Color.white)
             .cornerRadius(12)
+            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
             .padding(.horizontal, 16)
            
             // Ofertas de trabajo
@@ -289,7 +290,7 @@ struct PerfilEmpresaView: View {
                 Text("Ofertas y oportunidades")
                     .font(.headline)
                     .fontWeight(.bold)
-                    .foregroundColor(.white)
+                    .foregroundColor(.black)
                
                 Spacer()
                
@@ -331,7 +332,7 @@ struct PerfilEmpresaView: View {
             Text("Publicaciones")
                 .font(.headline)
                 .fontWeight(.bold)
-                .foregroundColor(.white)
+                .foregroundColor(.black)
            
             Text("Aquí aparecerán las publicaciones de la empresa")
                 .font(.body)
@@ -356,7 +357,7 @@ struct TabButtond: View {
             VStack(spacing: 8) {
                 Text(title)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(isSelected ? .primaryOrange : .textSecondary)
+                    .foregroundColor(isSelected ? .primaryOrange : .black)
                
                 Rectangle()
                     .fill(isSelected ? Color.primaryOrange : Color.clear)
@@ -388,7 +389,7 @@ struct StatCard2: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(value)
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.black)
                
                 Text(label)
                     .font(.system(size: 12))
@@ -429,7 +430,7 @@ struct JobCardEmpresa: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(.black)
            
             Text(location)
                 .font(.system(size: 14))
@@ -441,8 +442,9 @@ struct JobCardEmpresa: View {
                 .lineLimit(2)
         }
         .padding(16)
-        .background(Color.cardBackground)
+        .background(Color.white)
         .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.1), radius: 3, x: 0, y: 1)
     }
 }
 
