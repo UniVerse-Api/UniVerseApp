@@ -140,20 +140,22 @@ struct ContadoresEmpresa: Codable {
 
 // MARK: - Aplicación Visitante
 struct AplicacionVisitante: Codable {
+    let idAplicacion: Int
     let idOferta: Int
     let tituloOferta: String
     let fechaAplicacion: String
-    let estado: String
+    let status: String
     
     enum CodingKeys: String, CodingKey {
+        case idAplicacion = "id_aplicacion"
         case idOferta = "id_oferta"
         case tituloOferta = "titulo_oferta"
         case fechaAplicacion = "fecha_aplicacion"
-        case estado
+        case status
     }
 }
 
-// MARK: - Suscripción Activa Empresa (si es diferente a la de estudiante)
+// MARK: - Suscripción Activa Empresa
 struct SuscripcionActivaEmpresa: Codable {
     let idSuscripcion: Int
     let planNombre: String
