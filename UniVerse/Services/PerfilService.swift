@@ -501,4 +501,144 @@ class PerfilService: ObservableObject {
             throw PerfilError.networkError(error.localizedDescription)
         }
     }
+    
+    // MARK: - Experience Methods
+    
+    /// Obtiene las experiencias de un perfil usando el RPC get_experiencias_perfil
+    /// - Parameter idPerfil: ID del perfil
+    /// - Returns: ExperienciaLaboralResponse con las experiencias del perfil
+    func getExperienciasPerfil(idPerfil: Int) async throws -> ExperienciaLaboralResponse {
+        print("DEBUG PerfilService: getExperienciasPerfil called with idPerfil: \(idPerfil)")
+        
+        struct RPCParams: Codable {
+            let p_id_perfil: Int
+        }
+        
+        let params = RPCParams(p_id_perfil: idPerfil)
+        
+        do {
+            print("DEBUG PerfilService: Calling RPC get_experiencias_perfil with params: \(params)")
+            
+            let response = try await client.rpc(
+                "get_experiencias_perfil",
+                params: params
+            ).execute()
+            
+            let data = response.data
+            let decoder = JSONDecoder()
+            
+            print("DEBUG PerfilService: RPC get_experiencias_perfil response received")
+            
+            // Intentar decodificar como array primero (caso común con RPCs de Supabase)
+            do {
+                let responseArray = try decoder.decode([ExperienciaLaboralResponse].self, from: data)
+                guard let firstResponse = responseArray.first else {
+                    throw PerfilError.invalidResponse
+                }
+                print("DEBUG PerfilService: Successfully decoded from array")
+                return firstResponse
+            } catch {
+                // Si falla, intentar como objeto directo
+                let response = try decoder.decode(ExperienciaLaboralResponse.self, from: data)
+                print("DEBUG PerfilService: Successfully decoded as direct object")
+                return response
+            }
+            
+        } catch let error as PostgrestError {
+            print("DEBUG PerfilService: PostgrestError: \(error.localizedDescription)")
+            throw PerfilError.networkError(error.localizedDescription)
+        } catch {
+            print("DEBUG PerfilService: General error: \(error.localizedDescription)")
+            throw PerfilError.networkError(error.localizedDescription)
+        }
+    }
+    
+    /// Agrega una nueva experiencia al perfil usando el RPC agregar_experiencia
+    /// - Parameters:
+    ///   - idPerfil: ID del perfil
+    ///   - empresa: Nombre de la empresa
+    ///   - tipo: Tipo de experiencia
+    ///   - puesto: Puesto o cargo
+    ///   - fechaInicio: Fecha de inicio
+    ///   - fechaFin: Fecha de fin (opcional)
+    ///   - descripcion: Descripción de la experiencia (opcional)
+    ///   - ubicacion: Ubicación de la experiencia (opcional)
+    /// - Returns: AgregarExperienciaLaboralResponse con el resultado
+    func agregarExperiencia(
+        idPerfil: Int,
+        empresa: String,
+        tipo: TipoExperienciaLaboral,
+        puesto: String,
+        fechaInicio: Date,
+        fechaFin: Date?,
+        descripcion: String?,
+        ubicacion: String?
+    ) async throws -> AgregarExperienciaLaboralResponse {
+        print("DEBUG PerfilService: agregarExperiencia called with idPerfil: \(idPerfil), empresa: \(empresa)")
+        
+        struct RPCParams: Codable {
+            let p_id_perfil: Int
+            let p_empresa: String
+            let p_tipo: String
+            let p_puesto: String
+            let p_fecha_inicio: String
+            let p_fecha_fin: String?
+            let p_descripcion: String?
+            let p_ubicacion: String?
+        }
+        
+        // Formatear las fechas para PostgreSQL
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        
+        let fechaInicioString = dateFormatter.string(from: fechaInicio)
+        let fechaFinString = fechaFin != nil ? dateFormatter.string(from: fechaFin!) : nil
+        
+        let params = RPCParams(
+            p_id_perfil: idPerfil,
+            p_empresa: empresa,
+            p_tipo: tipo.rawValue,
+            p_puesto: puesto,
+            p_fecha_inicio: fechaInicioString,
+            p_fecha_fin: fechaFinString,
+            p_descripcion: descripcion?.isEmpty == true ? nil : descripcion,
+            p_ubicacion: ubicacion?.isEmpty == true ? nil : ubicacion
+        )
+        
+        do {
+            print("DEBUG PerfilService: Calling RPC agregar_experiencia with params: \(params)")
+            
+            let response = try await client.rpc(
+                "agregar_experiencia",
+                params: params
+            ).execute()
+            
+            let data = response.data
+            let decoder = JSONDecoder()
+            
+            print("DEBUG PerfilService: RPC agregar_experiencia response received")
+            
+            // Intentar decodificar como array primero (caso común con RPCs de Supabase)
+            do {
+                let responseArray = try decoder.decode([AgregarExperienciaLaboralResponse].self, from: data)
+                guard let firstResponse = responseArray.first else {
+                    throw PerfilError.invalidResponse
+                }
+                print("DEBUG PerfilService: Successfully decoded from array")
+                return firstResponse
+            } catch {
+                // Si falla, intentar como objeto directo
+                let response = try decoder.decode(AgregarExperienciaLaboralResponse.self, from: data)
+                print("DEBUG PerfilService: Successfully decoded as direct object")
+                return response
+            }
+            
+        } catch let error as PostgrestError {
+            print("DEBUG PerfilService: PostgrestError: \(error.localizedDescription)")
+            throw PerfilError.networkError(error.localizedDescription)
+        } catch {
+            print("DEBUG PerfilService: General error: \(error.localizedDescription)")
+            throw PerfilError.networkError(error.localizedDescription)
+        }
+    }
 }

@@ -8,6 +8,8 @@ struct MiPerfilView: View {
     @State private var showSettings = false
     @State private var showAddCertification = false
     
+    @State private var showExperiences = false
+    
     @StateObject private var perfilService = PerfilService()
     @State private var myProfile: MyProfileResponse?
     @State private var isLoading = true
@@ -56,6 +58,11 @@ struct MiPerfilView: View {
                         }
                     }
                 )
+            }
+        }
+        .sheet(isPresented: $showExperiences) {
+            if let perfil = myProfile?.perfil {
+                ExperienciasView(perfilId: perfil.idPerfil)
             }
         }
     }
@@ -389,9 +396,13 @@ struct MiPerfilView: View {
             
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 // Removed CV upload button
-                QuickActionButton(icon: "checkmark.seal.fill", title: "Certificación", color: .green)
-                QuickActionButton(icon: "briefcase.fill", title: "Experiencia", color: .purple)
-                QuickActionButton(icon: "flask.fill", title: "Investigación", color: .orange)
+                QuickActionButton(icon: "checkmark.seal.fill", title: "Certificación", color: .green, action: {
+                    showAddCertification = true
+                })
+                QuickActionButton(icon: "briefcase.fill", title: "Experiencia", color: .purple, action: {
+                    showExperiences = true
+                })
+                QuickActionButton(icon: "flask.fill", title: "Investigación", color: .orange, action: {})
             }
         }
         .padding(16)
@@ -884,9 +895,10 @@ struct QuickActionButton: View {
     let icon: String
     let title: String
     let color: Color
+    let action: () -> Void
     
     var body: some View {
-        Button(action: {}) {
+        Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: icon)
                     .font(.system(size: 16))
