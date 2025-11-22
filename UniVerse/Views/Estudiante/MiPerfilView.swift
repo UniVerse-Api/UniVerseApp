@@ -6,34 +6,69 @@ struct MiPerfilView: View {
     @State private var selectedActivityTab: ActivityTab = .posts
     @State private var showEditProfile = false
     @State private var showSettings = false
+    @State private var showAddCertification = false
+    
+    @StateObject private var perfilService = PerfilService()
+    @State private var myProfile: MyProfileResponse?
+    @State private var isLoading = true
     
     var body: some View {
         ZStack {
             Color.backgroundLight.ignoresSafeArea()
             
-            VStack(spacing: 0) {
-                // MARK: - Header
-                profileHeader
-                
-                // MARK: - Main Content
-                ScrollView {
-                    VStack(spacing: 0) {
-                        // Profile Info
-                        profileInfoSection
-                        
-                        // Quick Stats
-                        quickStatsSection
-                        
-                        // Tabs
-                        tabsSection
-                        
-                        // Tab Content
-                        tabContentSection
+            if isLoading {
+                ProgressView()
+            } else {
+                VStack(spacing: 0) {
+                    // MARK: - Header
+                    profileHeader
+                    
+                    // MARK: - Main Content
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            // Profile Info
+                            profileInfoSection
+                            
+                            // Quick Stats
+                            quickStatsSection
+                            
+                            // Tabs
+                            tabsSection
+                            
+                            // Tab Content
+                            tabContentSection
+                        }
                     }
                 }
             }
         }
         .navigationBarHidden(true)
+        .task {
+            await loadProfile()
+        }
+        .sheet(isPresented: $showAddCertification) {
+            if let perfil = myProfile?.perfil {
+                AddCertificationView(
+                    perfilId: perfil.idPerfil,
+                    onCertificationAdded: {
+                        Task {
+                            await loadProfile()
+                        }
+                    }
+                )
+            }
+        }
+    }
+    
+    private func loadProfile() async {
+        guard let userId = authVM.currentUser?.id else { return }
+        do {
+            myProfile = try await perfilService.getMyProfile(userId: userId)
+            isLoading = false
+        } catch {
+            print("Error loading profile: \(error)")
+            isLoading = false
+        }
     }
     
     // MARK: - Header
@@ -96,47 +131,70 @@ struct MiPerfilView: View {
             HStack(alignment: .top, spacing: 16) {
                 // Profile Picture
                 ZStack {
-                    // Animated gradient border
-                    Circle()
-                        .stroke(
-                            LinearGradient(
-                                gradient: Gradient(colors: [.blue, .purple, .indigo]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 3
-                        )
-                        .frame(width: 100, height: 100)
-                        .blur(radius: 2)
+                    // Animated gradient border if premium
+                    if myProfile?.suscripcion?.esPremium == true {
+                        Circle()
+                            .stroke(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [.blue, .purple, .indigo]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 3
+                            )
+                            .frame(width: 100, height: 100)
+                            .blur(radius: 2)
+                    }
                     
                     // Profile image
-                    Circle()
-                        .fill(Color.gray)
-                        .frame(width: 94, height: 94)
-                        .overlay(
-                            Image(systemName: "person.fill")
-                                .font(.system(size: 40))
-                                .foregroundColor(.white)
-                        )
+                    if let photoUrl = myProfile?.perfil?.fotoPerfil, let url = URL(string: photoUrl) {
+                        AsyncImage(url: url) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 94, height: 94)
+                                .clipShape(Circle())
+                        } placeholder: {
+                            Circle()
+                                .fill(Color.gray)
+                                .frame(width: 94, height: 94)
+                                .overlay(
+                                    Image(systemName: "person.fill")
+                                        .font(.system(size: 40))
+                                        .foregroundColor(.white)
+                                )
+                        }
+                    } else {
+                        Circle()
+                            .fill(Color.gray)
+                            .frame(width: 94, height: 94)
+                            .overlay(
+                                Image(systemName: "person.fill")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.white)
+                            )
+                    }
                     
                     // Premium badge
-                    Image(systemName: "diamond.fill")
-                        .font(.system(size: 12))
-                        .foregroundColor(.white)
-                        .padding(6)
-                        .background(
-                            LinearGradient(
-                                gradient: Gradient(colors: [.blue, .purple]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                    if myProfile?.suscripcion?.esPremium == true {
+                        Image(systemName: "diamond.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.white)
+                            .padding(6)
+                            .background(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [.blue, .purple]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                             )
-                        )
-                        .clipShape(Circle())
-                        .overlay(
-                            Circle()
-                                .stroke(Color.backgroundLight, lineWidth: 2)
-                        )
-                        .offset(x: 35, y: -35)
+                            .clipShape(Circle())
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.backgroundLight, lineWidth: 2)
+                            )
+                            .offset(x: 35, y: -35)
+                    }
                     
                     // Edit button
                     Button(action: {
@@ -159,37 +217,42 @@ struct MiPerfilView: View {
                 // User Info
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 8) {
-                        Text("Alexandra Chen")
+                        Text(myProfile?.perfil?.nombreCompleto ?? "Usuario")
                             .font(.system(size: 20, weight: .bold))
                             .foregroundColor(.textPrimary)
                         
+                        let isPremium = myProfile?.suscripcion?.esPremium ?? false
                         Text("ESTUDIANTE")
                             .font(.system(size: 9, weight: .bold))
-                            .foregroundColor(.primaryOrange)
+                            .foregroundColor(isPremium ? .primaryOrange : .blue)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(Color.primaryOrange.opacity(0.15))
+                            .background((isPremium ? Color.primaryOrange : Color.blue).opacity(0.15))
                             .cornerRadius(4)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 4)
-                                    .stroke(Color.primaryOrange.opacity(0.3), lineWidth: 1)
+                                    .stroke((isPremium ? Color.primaryOrange : Color.blue).opacity(0.3), lineWidth: 1)
                             )
                     }
                     
-                    Text("Ingeniería en Ciencias de la Computación")
-                        .font(.system(size: 14))
-                        .foregroundColor(.textSecondary)
+                    if let carrera = myProfile?.perfil?.carrera {
+                        Text(carrera)
+                            .font(.system(size: 14))
+                            .foregroundColor(.textSecondary)
+                    }
                     
-                    Text("@ Universidad Estatal")
-                        .font(.system(size: 13))
-                        .foregroundColor(.textSecondary)
+                    if let uni = myProfile?.perfil?.universidadActual {
+                        Text("@ \(uni)")
+                            .font(.system(size: 13))
+                            .foregroundColor(.textSecondary)
+                    }
                     
                     HStack(spacing: 4) {
                         Image(systemName: "location.fill")
                             .font(.system(size: 11))
                             .foregroundColor(.textSecondary)
                         
-                        Text("San Francisco, CA")
+                        Text("\(myProfile?.perfil?.ubicacion ?? ""), \(myProfile?.perfil?.pais ?? "")")
                             .font(.system(size: 13))
                             .foregroundColor(.textSecondary)
                     }
@@ -237,10 +300,10 @@ struct MiPerfilView: View {
     // MARK: - Quick Stats Section
     private var quickStatsSection: some View {
         HStack(spacing: 0) {
-            StatItem(value: "532", label: "Seguidores")
-            StatItem(value: "189", label: "Siguiendo")
-            StatItem(value: "24", label: "Publicaciones")
-            StatItem(value: "12", label: "Guardados")
+            StatItem(value: "\(myProfile?.estadisticas?.seguidores ?? 0)", label: "Seguidores")
+            StatItem(value: "\(myProfile?.estadisticas?.siguiendo ?? 0)", label: "Siguiendo")
+            StatItem(value: "\(myProfile?.estadisticas?.publicaciones ?? 0)", label: "Publicaciones")
+            StatItem(value: "\(myProfile?.estadisticas?.guardados ?? 0)", label: "Guardados")
         }
         .padding(.vertical, 16)
         .padding(.vertical, 16)
@@ -356,7 +419,9 @@ struct MiPerfilView: View {
                 
                 Spacer()
                 
-                Button(action: {}) {
+                Button(action: {
+                    showAddCertification = true
+                }) {
                     HStack(spacing: 4) {
                         Image(systemName: "plus")
                             .font(.system(size: 12))
@@ -368,21 +433,22 @@ struct MiPerfilView: View {
             }
             
             VStack(spacing: 12) {
-                DocumentRow(
-                    icon: "checkmark.seal.fill",
-                    iconColor: .blue,
-                    title: "AWS Cloud Practitioner",
-                    subtitle: "Certificación • 2024",
-                    backgroundColor: Color(hex: "0D1117").opacity(0.05)
-                )
-                
-                DocumentRow(
-                    icon: "checkmark.seal.fill",
-                    iconColor: .purple,
-                    title: "Google Data Analytics",
-                    subtitle: "Certificación • 2023",
-                    backgroundColor: Color(hex: "0D1117").opacity(0.05)
-                )
+                if let certs = myProfile?.certificaciones, !certs.isEmpty {
+                    ForEach(certs) { cert in
+                        DocumentRow(
+                            icon: "checkmark.seal.fill",
+                            iconColor: .blue,
+                            title: cert.titulo,
+                            subtitle: "\(cert.institucion) • \(cert.fecha)",
+                            backgroundColor: Color(hex: "0D1117").opacity(0.05)
+                        )
+                    }
+                } else {
+                    Text("No tienes certificaciones registradas.")
+                        .font(.system(size: 14))
+                        .foregroundColor(.textSecondary)
+                        .padding(.vertical, 8)
+                }
             }
         }
         .padding(16)
@@ -395,57 +461,85 @@ struct MiPerfilView: View {
     }
     
     private var profileCompletionCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Completar Perfil")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.textPrimary)
-                
-                Spacer()
-                
-                Text("85%")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.primaryOrange)
-            }
-            
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.gray.opacity(0.3))
-                        .frame(height: 8)
+        let skillsCount = myProfile?.progreso?.habilidadesCount ?? 0
+        let certsCount = myProfile?.progreso?.certificacionesCount ?? 0
+        let langsCount = myProfile?.progreso?.idiomasCount ?? 0
+        
+        let skillsTarget = 3
+        let certsTarget = 1
+        let langsTarget = 1
+        
+        let skillsProgress = min(skillsCount, skillsTarget)
+        let certsProgress = min(certsCount, certsTarget)
+        let langsProgress = min(langsCount, langsTarget)
+        
+        let totalProgress = Double(skillsProgress + certsProgress + langsProgress) / Double(skillsTarget + certsTarget + langsTarget)
+        let percentage = Int(totalProgress * 100)
+        
+        return Group {
+            if percentage < 100 {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Completar Perfil")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.textPrimary)
+                        
+                        Spacer()
+                        
+                        Text("\(percentage)%")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.primaryOrange)
+                    }
                     
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.primaryOrange)
-                        .frame(width: geometry.size.width * 0.85, height: 8)
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(height: 8)
+                            
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.primaryOrange)
+                                .frame(width: geometry.size.width * CGFloat(totalProgress), height: 8)
+                        }
+                    }
+                    .frame(height: 8)
+                    
+                    Text("¡Casi listo! Completa tu perfil para aumentar tus oportunidades.")
+                        .font(.system(size: 13))
+                        .foregroundColor(.textSecondary)
+                    
+                    VStack(spacing: 8) {
+                        if skillsCount < skillsTarget {
+                            CompletionTaskRow(task: "Agregar \(skillsTarget - skillsCount) habilidades más")
+                        }
+                        if certsCount < certsTarget {
+                            CompletionTaskRow(task: "Agregar una certificación")
+                        }
+                        if langsCount < langsTarget {
+                            CompletionTaskRow(task: "Agregar un idioma")
+                        }
+                    }
                 }
-            }
-            .frame(height: 8)
-            
-            Text("¡Casi listo! Completa tu perfil para aumentar tus oportunidades.")
-                .font(.system(size: 13))
-                .foregroundColor(.textSecondary)
-            
-            VStack(spacing: 8) {
-                CompletionTaskRow(task: "Agregar x habilidades más")
-                CompletionTaskRow(task: "Agregar al menos un idioma")
+                .padding(16)
+                .background(
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            Color.primaryOrange.opacity(0.1),
+                            Color.orange.opacity(0.05)
+                        ]),
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.primaryOrange.opacity(0.3), lineWidth: 1)
+                )
+            } else {
+                EmptyView()
             }
         }
-        .padding(16)
-        .background(
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color.primaryOrange.opacity(0.1),
-                    Color.orange.opacity(0.05)
-                ]),
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-        )
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.primaryOrange.opacity(0.3), lineWidth: 1)
-        )
     }
     
     private var recentActivityCard: some View {
@@ -461,12 +555,20 @@ struct MiPerfilView: View {
             }
             
             VStack(spacing: 12) {
-                ActivityItem(
-                    icon: "briefcase.fill",
-                    iconColor: .green,
-                    text: "Aplicaste a Desarrollador Full Stack en Innovate Inc.",
-                    time: "Hace 2 días"
-                )
+                if let activities = myProfile?.actividadReciente, !activities.isEmpty {
+                    ForEach(activities) { activity in
+                        ActivityItem(
+                            icon: "doc.text.fill", // Assuming all are posts for now as per RPC
+                            iconColor: .blue,
+                            text: "Publicaste: \(activity.titulo)",
+                            time: activity.fecha // You might want to format this date
+                        )
+                    }
+                } else {
+                    Text("No hay actividad reciente.")
+                        .font(.system(size: 14))
+                        .foregroundColor(.textSecondary)
+                }
             }
         }
         .padding(16)
@@ -893,7 +995,7 @@ struct ActivityItem: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(text)
                     .font(.system(size: 13))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
                 
                 Text(time)
                     .font(.system(size: 11))

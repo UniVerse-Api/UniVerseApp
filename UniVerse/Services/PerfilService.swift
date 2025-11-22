@@ -387,4 +387,118 @@ class PerfilService: ObservableObject {
             throw PerfilError.unsupportedRole
         }
     }
+    
+    
+    // MARK: - My Profile Method
+    
+    /// Obtiene el perfil del usuario actual usando el RPC get_myprof
+    /// - Parameter userId: UUID del usuario
+    /// - Returns: MyProfileResponse con la información del perfil
+    func getMyProfile(userId: UUID) async throws -> MyProfileResponse {
+        print("DEBUG PerfilService: getMyProfile called with userId: \(userId)")
+        
+        struct Params: Codable {
+            let p_user_id: UUID
+        }
+        
+        let params = Params(p_user_id: userId)
+        
+        let response = try await client.rpc("get_myprof", params: params).execute()
+        
+        let data = response.data
+        let decoder = JSONDecoder()
+        
+        // Configurar el decodificador para fechas si es necesario, aunque el RPC devuelve strings
+        // Si el RPC devuelve fechas en formato ISO, esto ayudará
+        
+        return try decoder.decode(MyProfileResponse.self, from: data)
+    }
+    
+    // MARK: - Certification Methods
+    
+    /// Estructura para la respuesta del RPC agregar_certificacion
+    struct AgregarCertificacionResponse: Codable {
+        let success: Bool
+        let message: String
+        let idCertificacion: Int?
+        let imagen: String?
+        
+        enum CodingKeys: String, CodingKey {
+            case success
+            case message
+            case idCertificacion = "id_certificacion"
+            case imagen
+        }
+    }
+    
+    /// Agrega una nueva certificación al perfil usando el RPC agregar_certificacion
+    /// - Parameters:
+    ///   - idPerfil: ID del perfil al que agregar la certificación
+    ///   - titulo: Título de la certificación
+    ///   - institucion: Institución que otorga la certificación
+    ///   - fechaObtencion: Fecha de obtención de la certificación
+    /// - Returns: AgregarCertificacionResponse con el resultado de la operación
+    func agregarCertificacion(
+        idPerfil: Int,
+        titulo: String,
+        institucion: String,
+        fechaObtencion: Date
+    ) async throws -> AgregarCertificacionResponse {
+        print("DEBUG PerfilService: agregarCertificacion called with idPerfil: \(idPerfil), titulo: \(titulo), institucion: \(institucion)")
+        
+        struct RPCParams: Codable {
+            let p_id_perfil: Int
+            let p_titulo: String
+            let p_institucion: String
+            let p_fecha_obtencion: String
+        }
+        
+        // Formatear la fecha para PostgreSQL
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let fechaString = dateFormatter.string(from: fechaObtencion)
+        
+        let params = RPCParams(
+            p_id_perfil: idPerfil,
+            p_titulo: titulo,
+            p_institucion: institucion,
+            p_fecha_obtencion: fechaString
+        )
+        
+        do {
+            print("DEBUG PerfilService: Calling RPC agregar_certificacion with params: \(params)")
+            
+            let response = try await client.rpc(
+                "agregar_certificacion",
+                params: params
+            ).execute()
+            
+            let data = response.data
+            let decoder = JSONDecoder()
+            
+            print("DEBUG PerfilService: RPC agregar_certificacion response received")
+            
+            // Intentar decodificar como array primero (caso común con RPCs de Supabase)
+            do {
+                let responseArray = try decoder.decode([AgregarCertificacionResponse].self, from: data)
+                guard let firstResponse = responseArray.first else {
+                    throw PerfilError.invalidResponse
+                }
+                print("DEBUG PerfilService: Successfully decoded from array")
+                return firstResponse
+            } catch {
+                // Si falla, intentar como objeto directo
+                let response = try decoder.decode(AgregarCertificacionResponse.self, from: data)
+                print("DEBUG PerfilService: Successfully decoded as direct object")
+                return response
+            }
+            
+        } catch let error as PostgrestError {
+            print("DEBUG PerfilService: PostgrestError: \(error.localizedDescription)")
+            throw PerfilError.networkError(error.localizedDescription)
+        } catch {
+            print("DEBUG PerfilService: General error: \(error.localizedDescription)")
+            throw PerfilError.networkError(error.localizedDescription)
+        }
+    }
 }
