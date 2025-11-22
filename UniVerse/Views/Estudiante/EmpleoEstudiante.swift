@@ -110,13 +110,16 @@ struct EmpleosEstudianteView: View {
                                     )
                                 } else {
                                     ForEach(filteredOfertas) { oferta in
-                                        OfertaCardView(
-                                            oferta: oferta,
-                                            isBookmarked: bookmarkedJobs.contains(oferta.id),
-                                            onBookmarkTap: {
-                                                toggleBookmark(oferta.id)
-                                            }
-                                        )
+                                        NavigationLink(destination: DetalleEmpleoView(oferta: oferta)) {
+                                            OfertaCardView(
+                                                oferta: oferta,
+                                                isBookmarked: bookmarkedJobs.contains(oferta.id),
+                                                onBookmarkTap: {
+                                                    toggleBookmark(oferta.id)
+                                                }
+                                            )
+                                        }
+                                        .buttonStyle(PlainButtonStyle())
                                     }
                                 }
                             }
@@ -437,15 +440,13 @@ struct OfertaCardView: View {
             
             // Action Buttons
             HStack(spacing: 8) {
-                Button(action: {}) {
-                    Text("Aplicar")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.black)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(Color.primaryOrange)
-                        .cornerRadius(8)
-                }
+                Text("Ver Detalles")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(Color.primaryOrange)
+                    .cornerRadius(8)
                 
                 Button(action: onBookmarkTap) {
                     Image(systemName: isBookmarked ? "bookmark.fill" : "bookmark")

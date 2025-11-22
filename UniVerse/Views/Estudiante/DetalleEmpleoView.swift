@@ -27,43 +27,19 @@ struct JobBenefit: Identifiable {
 }
 
 struct DetalleEmpleoView: View {
+    let oferta: OfertaEstudiante
+    
     @State private var isBookmarked = false
     @State private var showApplicationView = false
+    @State private var beneficios: [String] = []
+    @State private var isLoadingBeneficios = false
     
+    @StateObject private var ofertaService = OfertaService()
     @Environment(\.presentationMode) var presentationMode
-    
-    let job = JobDetail(
-        title: "Desarrollador Full Stack Junior",
-        company: "Innovate Inc.",
-        logoUrl: "building.2.fill",
-        location: "San Francisco, CA",
-        jobType: "Tiempo Completo",
-        postedDate: "Publicado hace 2 días",
-        isVerified: true,
-        salaryRange: "$80,000 - $100,000 USD",
-        salaryDescription: "Salario anual + beneficios",
-        description: "Buscamos un Desarrollador Full Stack Junior apasionado por la tecnología para unirse a nuestro equipo dinámico. Trabajarás en proyectos innovadores utilizando las últimas tecnologías web, colaborando con diseñadores y otros desarrolladores para crear aplicaciones web escalables y de alta calidad.",
-        additionalDescription: "Esta es una excelente oportunidad para crecer profesionalmente en un ambiente de startup, donde podrás aprender rápidamente y tener un impacto real en el producto final.",
-        requirements: [
-            "Licenciatura en Ciencias de la Computación o campo relacionado",
-            "1-2 años de experiencia en desarrollo web",
-            "Experiencia con JavaScript, React, Node.js",
-            "Conocimientos de bases de datos SQL y NoSQL",
-            "Inglés conversacional"
-        ],
-        benefits: [
-            JobBenefit(icon: "cross.case.fill", title: "Seguro médico completo", color: .blue),
-            JobBenefit(icon: "beach.umbrella.fill", title: "20 días de vacaciones al año", color: .green),
-            JobBenefit(icon: "graduationcap.fill", title: "Presupuesto para formación y conferencias", color: .purple),
-            JobBenefit(icon: "laptopcomputer", title: "Equipo de trabajo moderno", color: .orange)
-        ],
-        deadline: "15 de Noviembre, 2024",
-        companyDescription: "Innovate Inc. es una startup tecnológica líder en el desarrollo de soluciones SaaS para empresas medianas. Fundada en 2020, hemos crecido rápidamente y ahora servimos a más de 10,000 clientes en todo el mundo. Nuestro equipo de 50+ profesionales está comprometido con la innovación y la excelencia tecnológica."
-    )
     
     var body: some View {
         ZStack {
-            Color.backgroundDark.ignoresSafeArea()
+            Color.backgroundLight.ignoresSafeArea()
             
             VStack(spacing: 0) {
                 // MARK: - Header
@@ -90,9 +66,6 @@ struct DetalleEmpleoView: View {
                         // Application Deadline
                         deadlineCard
                         
-                        // Company Info
-                        companyInfoCard
-                        
                         Spacer(minLength: 100)
                     }
                     .padding(.horizontal, 16)
@@ -108,6 +81,9 @@ struct DetalleEmpleoView: View {
             }
         }
         .navigationBarHidden(true)
+        .task {
+            await loadBeneficios()
+        }
     }
     
     // MARK: - Header Section
@@ -119,13 +95,19 @@ struct DetalleEmpleoView: View {
                 }) {
                     Image(systemName: "arrow.left")
                         .font(.system(size: 18))
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                         .padding(8)
                 }
                 
-                Text("Detalle del Empleo")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.white)
+                HStack(spacing: 8) {
+                    Text("Detalle del Empleo")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.textPrimary)
+                    
+                    Image(systemName: "briefcase.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(.black)
+                }
                 
                 Spacer()
                 
@@ -147,36 +129,63 @@ struct DetalleEmpleoView: View {
                 .fill(Color.borderColor)
                 .frame(height: 1)
         }
-        .background(Color.backgroundDark.opacity(0.8))
+        .background(Color.cardBackground.opacity(0.95))
         .backdrop()
     }
     
     // MARK: - Company Header Card
     private var companyHeaderCard: some View {
         HStack(alignment: .top, spacing: 16) {
-            // Company Logo
-            ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.white)
+            // Company Logo - Clickeable para ir al perfil
+            NavigationLink(destination: PerfilEmpresaView(idPerfil: oferta.idPerfilEmpresa)) {
+                if let fotoPerfil = oferta.fotoPerfil, !fotoPerfil.isEmpty {
+                    AsyncImage(url: URL(string: fotoPerfil)) { image in
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    } placeholder: {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.blue.opacity(0.2))
+                                .frame(width: 80, height: 80)
+                            
+                            Image(systemName: "building.2.fill")
+                                .font(.system(size: 40))
+                                .foregroundColor(.blue)
+                        }
+                    }
                     .frame(width: 80, height: 80)
-                
-                Image(systemName: job.logoUrl)
-                    .font(.system(size: 40))
-                    .foregroundColor(.blue)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.borderColor, lineWidth: 1)
+                    )
+                } else {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.blue.opacity(0.2))
+                            .frame(width: 80, height: 80)
+                        
+                        Image(systemName: "building.2.fill")
+                            .font(.system(size: 40))
+                            .foregroundColor(.blue)
+                    }
+                }
             }
             
             // Job Details
             VStack(alignment: .leading, spacing: 8) {
-                Text(job.title)
+                Text(oferta.titulo)
                     .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
                 
                 HStack(spacing: 6) {
-                    Text(job.company)
+                    Text(oferta.nombreCompleto)
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.textSecondary)
                     
-                    if job.isVerified {
+                    // Verificación badge (opcional, puedes agregarlo si tienes ese campo)
+                    if oferta.esPremium {
                         ZStack {
                             Circle()
                                 .fill(
@@ -196,9 +205,9 @@ struct DetalleEmpleoView: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 6) {
-                    JobDetailInfoRow(icon: "location.fill", text: job.location)
-                    JobDetailInfoRow(icon: "clock.fill", text: job.jobType)
-                    JobDetailInfoRow(icon: "calendar", text: job.postedDate)
+                    JobDetailInfoRow(icon: "location.fill", text: oferta.ubicacion)
+                    JobDetailInfoRow(icon: "clock.fill", text: oferta.tipoOferta.displayName)
+                    JobDetailInfoRow(icon: "calendar", text: formatPublicationDate(oferta.fechaPublicacion))
                 }
             }
             
@@ -227,11 +236,11 @@ struct DetalleEmpleoView: View {
             }
             
             VStack(alignment: .leading, spacing: 4) {
-                Text(job.salaryRange)
+                Text(oferta.salarioRango)
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(.green)
                 
-                Text(job.salaryDescription)
+                Text("Rango salarial")
                     .font(.system(size: 13))
                     .foregroundColor(.green.opacity(0.9))
             }
@@ -265,20 +274,13 @@ struct DetalleEmpleoView: View {
                 
                 Text("Descripción del Puesto")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
             }
             
-            VStack(alignment: .leading, spacing: 12) {
-                Text(job.description)
-                    .font(.system(size: 14))
-                    .foregroundColor(.textSecondary)
-                    .lineSpacing(4)
-                
-                Text(job.additionalDescription)
-                    .font(.system(size: 14))
-                    .foregroundColor(.textSecondary)
-                    .lineSpacing(4)
-            }
+            Text(oferta.descripcion)
+                .font(.system(size: 14))
+                .foregroundColor(.textSecondary)
+                .lineSpacing(4)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
@@ -300,12 +302,12 @@ struct DetalleEmpleoView: View {
                 
                 Text("Requisitos")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
             }
             
             VStack(alignment: .leading, spacing: 12) {
-                ForEach(job.requirements, id: \.self) { requirement in
-                    JobRequirementRow(text: requirement)
+                ForEach(oferta.requisitos, id: \.self) { requisito in
+                    JobRequirementRow(text: requisito)
                 }
             }
         }
@@ -329,12 +331,26 @@ struct DetalleEmpleoView: View {
                 
                 Text("Beneficios")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
             }
             
-            VStack(spacing: 10) {
-                ForEach(job.benefits) { benefit in
-                    JobBenefitRow(benefit: benefit)
+            if isLoadingBeneficios {
+                HStack {
+                    Spacer()
+                    ProgressView()
+                        .padding(.vertical, 20)
+                    Spacer()
+                }
+            } else if beneficios.isEmpty {
+                Text("No se especificaron beneficios para esta oferta")
+                    .font(.system(size: 13))
+                    .foregroundColor(.textSecondary)
+                    .italic()
+            } else {
+                VStack(spacing: 10) {
+                    ForEach(Array(beneficios.enumerated()), id: \.offset) { index, beneficio in
+                        SimpleBenefitRow(text: beneficio, index: index)
+                    }
                 }
             }
         }
@@ -360,9 +376,15 @@ struct DetalleEmpleoView: View {
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.orange)
                 
-                Text(job.deadline)
-                    .font(.system(size: 13))
-                    .foregroundColor(.orange.opacity(0.9))
+                if let fechaLimite = oferta.fechaLimite {
+                    Text(formatDeadline(fechaLimite))
+                        .font(.system(size: 13))
+                        .foregroundColor(.orange.opacity(0.9))
+                } else {
+                    Text("Sin fecha límite especificada")
+                        .font(.system(size: 13))
+                        .foregroundColor(.orange.opacity(0.9))
+                }
             }
             
             Spacer()
@@ -386,32 +408,7 @@ struct DetalleEmpleoView: View {
     }
     
     // MARK: - Company Info Card
-    private var companyInfoCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                Image(systemName: "building.2.fill")
-                    .font(.system(size: 16))
-                    .foregroundColor(.primaryOrange)
-                
-                Text("Sobre \(job.company)")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
-            }
-            
-            Text(job.companyDescription)
-                .font(.system(size: 14))
-                .foregroundColor(.textSecondary)
-                .lineSpacing(4)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(Color.cardBackground)
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.borderColor, lineWidth: 1)
-        )
-    }
+   
     
     // MARK: - Apply Button
     private var applyButton: some View {
@@ -437,8 +434,106 @@ struct DetalleEmpleoView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
-        .background(Color.backgroundDark.opacity(0.9))
+        .background(Color.cardBackground.opacity(0.95))
         .backdrop()
+    }
+    
+    // MARK: - Helper Methods
+    private func loadBeneficios() async {
+        isLoadingBeneficios = true
+        do {
+            beneficios = try await ofertaService.getBeneficios(idOferta: oferta.id)
+        } catch {
+            print("Error loading beneficios: \(error)")
+            beneficios = []
+        }
+        isLoadingBeneficios = false
+    }
+    
+    private func formatPublicationDate(_ date: Date) -> String {
+        let calendar = Calendar.current
+        let now = Date()
+        let components = calendar.dateComponents([.day], from: date, to: now)
+        
+        if let days = components.day {
+            if days == 0 {
+                return "Publicado hoy"
+            } else if days == 1 {
+                return "Publicado hace 1 día"
+            } else if days < 7 {
+                return "Publicado hace \(days) días"
+            } else if days < 30 {
+                let weeks = days / 7
+                return "Publicado hace \(weeks) semana\(weeks > 1 ? "s" : "")"
+            } else {
+                let months = days / 30
+                return "Publicado hace \(months) mes\(months > 1 ? "es" : "")"
+            }
+        }
+        
+        return "Publicado hace tiempo"
+    }
+    
+    private func formatDeadline(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        formatter.locale = Locale(identifier: "es_ES")
+        return formatter.string(from: date)
+    }
+}
+
+// MARK: - Simple Benefit Row Component
+struct SimpleBenefitRow: View {
+    let text: String
+    let index: Int
+    
+    private var benefitIcon: String {
+        let lowercasedText = text.lowercased()
+        
+        // Seguro médico / salud
+        if lowercasedText.contains("seguro") || lowercasedText.contains("médico") ||
+           lowercasedText.contains("medico") || lowercasedText.contains("salud") {
+            return "cross.case.fill"
+        }
+        // Vacaciones
+        else if lowercasedText.contains("vacacion") || lowercasedText.contains("días libres") ||
+                lowercasedText.contains("dias libres") {
+            return "beach.umbrella.fill"
+        }
+        // Formación / capacitación / educación
+        else if lowercasedText.contains("formación") || lowercasedText.contains("formacion") ||
+                lowercasedText.contains("capacitación") || lowercasedText.contains("capacitacion") ||
+                lowercasedText.contains("educación") || lowercasedText.contains("educacion") ||
+                lowercasedText.contains("curso") || lowercasedText.contains("entrenamiento") {
+            return "graduationcap.fill"
+        }
+        // Por defecto
+        else {
+            return "checkmark.circle.fill"
+        }
+    }
+    
+    private var benefitColor: Color {
+        let colors: [Color] = [.blue, .green, .purple, .orange, .pink, .cyan]
+        return colors[index % colors.count]
+    }
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: benefitIcon)
+                .font(.system(size: 18))
+                .foregroundColor(benefitColor)
+                .frame(width: 24, height: 24)
+            
+            Text(text)
+                .font(.system(size: 13))
+                .foregroundColor(.textSecondary)
+            
+            Spacer()
+        }
+        .padding(12)
+        .background(Color.backgroundLight)
+        .cornerRadius(8)
     }
 }
 
@@ -498,7 +593,7 @@ struct JobBenefitRow: View {
             Spacer()
         }
         .padding(12)
-        .background(Color(red: 30/255, green: 30/255, blue: 30/255))
+        .background(Color.backgroundLight)
         .cornerRadius(8)
     }
 }
@@ -506,7 +601,27 @@ struct JobBenefitRow: View {
 // MARK: - Preview
 #Preview {
     NavigationView {
-        DetalleEmpleoView()
+        DetalleEmpleoView(oferta: OfertaEstudiante(
+            id: 1,
+            titulo: "Desarrollador iOS Junior",
+            descripcion: "Buscamos un desarrollador iOS apasionado para unirse a nuestro equipo. Trabajarás en proyectos innovadores utilizando Swift y SwiftUI.",
+            salarioRango: "$1,200 - $1,800 USD",
+            tipoOferta: .tiempoCompleto,
+            ubicacion: "San Salvador, El Salvador",
+            fechaPublicacion: Date().addingTimeInterval(-86400 * 2),
+            fechaLimite: Date().addingTimeInterval(86400 * 15),
+            idPerfilEmpresa: 1,
+            nombreCompleto: "Tech Solutions SV",
+            fotoPerfil: nil,
+            ubicacionEmpresa: "San Salvador, El Salvador",
+            requisitos: [
+                "Experiencia con Swift y SwiftUI",
+                "Conocimientos de UIKit",
+                "Inglés intermedio",
+                "Trabajo en equipo"
+            ],
+            esPremium: true
+        ))
     }
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }

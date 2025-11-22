@@ -133,4 +133,38 @@ class OfertaService: ObservableObject {
             throw OfertaError.networkError(error.localizedDescription)
         }
     }
+    
+    /// Obtiene los beneficios de una oferta específica
+    /// - Parameter idOferta: ID de la oferta
+    /// - Returns: Array de nombres de beneficios
+    func getBeneficios(idOferta: Int) async throws -> [String] {
+        print("DEBUG OfertaService: getBeneficios called for oferta: \(idOferta)")
+        
+        do {
+            let response = try await client.rpc(
+                "get_beneficios_oferta",
+                params: ["p_id_oferta": idOferta]
+            ).execute()
+            let data = response.data
+            
+            // DEBUG: Ver el JSON crudo
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("DEBUG OfertaService: Raw beneficios JSON: \(jsonString)")
+            }
+            
+            let decoder = JSONDecoder()
+            let beneficios = try decoder.decode([BeneficioOferta].self, from: data)
+            print("DEBUG OfertaService: Successfully decoded \(beneficios.count) beneficios")
+            
+            // Retornar solo los nombres de los beneficios
+            return beneficios.map { $0.nombreBeneficio }
+            
+        } catch let error as PostgrestError {
+            print("DEBUG OfertaService: PostgrestError: \(error.localizedDescription)")
+            throw OfertaError.networkError(error.localizedDescription)
+        } catch {
+            print("DEBUG OfertaService: General error: \(error.localizedDescription)")
+            throw OfertaError.networkError(error.localizedDescription)
+        }
+    }
 }
