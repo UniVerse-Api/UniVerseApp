@@ -45,7 +45,7 @@ struct MiPerfilView: View {
                 }) {
                     Image(systemName: "arrow.left")
                         .font(.system(size: 18))
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                         .padding(8)
                 }
                 
@@ -53,7 +53,7 @@ struct MiPerfilView: View {
                 
                 Text("Mi Perfil")
                     .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
                 
                 Spacer()
                 
@@ -63,7 +63,7 @@ struct MiPerfilView: View {
                     }) {
                         Image(systemName: "gearshape.fill")
                             .font(.system(size: 18))
-                            .foregroundColor(.white)
+                            .foregroundColor(.textPrimary)
                             .padding(8)
                     }
                     
@@ -86,7 +86,7 @@ struct MiPerfilView: View {
                 .fill(Color.borderColor)
                 .frame(height: 1)
         }
-        .background(Color.backgroundDark.opacity(0.8))
+        .background(Color.backgroundLight.opacity(0.95))
         .backdrop()
     }
     
@@ -134,7 +134,7 @@ struct MiPerfilView: View {
                         .clipShape(Circle())
                         .overlay(
                             Circle()
-                                .stroke(Color.backgroundDark, lineWidth: 2)
+                                .stroke(Color.backgroundLight, lineWidth: 2)
                         )
                         .offset(x: 35, y: -35)
                     
@@ -150,7 +150,7 @@ struct MiPerfilView: View {
                             .clipShape(Circle())
                             .overlay(
                                 Circle()
-                                    .stroke(Color.backgroundDark, lineWidth: 2)
+                                    .stroke(Color.backgroundLight, lineWidth: 2)
                             )
                     }
                     .offset(x: 35, y: 35)
@@ -161,9 +161,9 @@ struct MiPerfilView: View {
                     HStack(spacing: 8) {
                         Text("Alexandra Chen")
                             .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(.white)
+                            .foregroundColor(.textPrimary)
                         
-                        Text("ESTUDIANTE PREMIUM")
+                        Text("ESTUDIANTE")
                             .font(.system(size: 9, weight: .bold))
                             .foregroundColor(.primaryOrange)
                             .padding(.horizontal, 8)
@@ -222,15 +222,16 @@ struct MiPerfilView: View {
                 }) {
                     Image(systemName: "square.and.arrow.up")
                         .font(.system(size: 14))
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                         .padding(10)
                         .background(Color.cardBackground)
                         .cornerRadius(8)
                 }
             }
         }
+
         .padding(16)
-        .background(Color.backgroundDark)
+        .background(Color.backgroundLight)
     }
     
     // MARK: - Quick Stats Section
@@ -242,8 +243,9 @@ struct MiPerfilView: View {
             StatItem(value: "12", label: "Guardados")
         }
         .padding(.vertical, 16)
+        .padding(.vertical, 16)
         .padding(.horizontal, 16)
-        .background(Color.backgroundDark)
+        .background(Color.backgroundLight)
     }
     
     // MARK: - Tabs Section
@@ -268,7 +270,7 @@ struct MiPerfilView: View {
                     action: { selectedTab = .plan }
                 )
             }
-            .background(Color.backgroundDark)
+            .background(Color.backgroundLight)
             
             Rectangle()
                 .fill(Color.borderColor)
@@ -288,8 +290,9 @@ struct MiPerfilView: View {
                 planTabContent
             }
         }
+
         .padding(16)
-        .background(Color(red: 13/255, green: 15/255, blue: 20/255))
+        .background(Color.backgroundLight)
     }
     
     // MARK: - General Tab Content
@@ -318,11 +321,11 @@ struct MiPerfilView: View {
                 
                 Text("Acciones Rápidas")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
             }
             
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                QuickActionButton(icon: "doc.text", title: "Subir CV", color: .blue)
+                // Removed CV upload button
                 QuickActionButton(icon: "checkmark.seal.fill", title: "Certificación", color: .green)
                 QuickActionButton(icon: "briefcase.fill", title: "Experiencia", color: .purple)
                 QuickActionButton(icon: "flask.fill", title: "Investigación", color: .orange)
@@ -345,9 +348,10 @@ struct MiPerfilView: View {
                         .font(.system(size: 16))
                         .foregroundColor(.primaryOrange)
                     
-                    Text("Mis Documentos")
+                    
+                    Text("Mis Certificaciones")
                         .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                 }
                 
                 Spacer()
@@ -365,17 +369,19 @@ struct MiPerfilView: View {
             
             VStack(spacing: 12) {
                 DocumentRow(
-                    icon: "doc.fill",
-                    iconColor: .red,
-                    title: "CV_Alexandra_Chen_2024.pdf",
-                    subtitle: "Principal • Actualizado hace 2 días"
+                    icon: "checkmark.seal.fill",
+                    iconColor: .blue,
+                    title: "AWS Cloud Practitioner",
+                    subtitle: "Certificación • 2024",
+                    backgroundColor: Color(hex: "0D1117").opacity(0.05)
                 )
                 
                 DocumentRow(
                     icon: "checkmark.seal.fill",
-                    iconColor: .blue,
-                    title: "AWS Cloud Practitioner",
-                    subtitle: "Certificación • 2024"
+                    iconColor: .purple,
+                    title: "Google Data Analytics",
+                    subtitle: "Certificación • 2023",
+                    backgroundColor: Color(hex: "0D1117").opacity(0.05)
                 )
             }
         }
@@ -393,7 +399,7 @@ struct MiPerfilView: View {
             HStack {
                 Text("Completar Perfil")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
                 
                 Spacer()
                 
@@ -420,8 +426,8 @@ struct MiPerfilView: View {
                 .foregroundColor(.textSecondary)
             
             VStack(spacing: 8) {
-                CompletionTaskRow(task: "Agregar 2 habilidades más")
-                CompletionTaskRow(task: "Subir foto de portada")
+                CompletionTaskRow(task: "Agregar x habilidades más")
+                CompletionTaskRow(task: "Agregar al menos un idioma")
             }
         }
         .padding(16)
@@ -451,7 +457,7 @@ struct MiPerfilView: View {
                 
                 Text("Actividad Reciente")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
             }
             
             VStack(spacing: 12) {
@@ -460,20 +466,6 @@ struct MiPerfilView: View {
                     iconColor: .green,
                     text: "Aplicaste a Desarrollador Full Stack en Innovate Inc.",
                     time: "Hace 2 días"
-                )
-                
-                ActivityItem(
-                    icon: "doc.text.fill",
-                    iconColor: .blue,
-                    text: "Actualizaste tu CV",
-                    time: "Hace 2 días"
-                )
-                
-                ActivityItem(
-                    icon: "person.2.fill",
-                    iconColor: .purple,
-                    text: "Nuevos seguidores: +3",
-                    time: "Hace 3 días"
                 )
             }
         }
@@ -508,12 +500,6 @@ struct MiPerfilView: View {
                         title: "Siguiendo",
                         isSelected: selectedActivityTab == .following,
                         action: { selectedActivityTab = .following }
-                    )
-                    
-                    ActivityTabButton(
-                        title: "Seguidores",
-                        isSelected: selectedActivityTab == .followers,
-                        action: { selectedActivityTab = .followers }
                     )
                 }
                 .padding(.horizontal, 16)
@@ -625,7 +611,7 @@ struct MiPerfilView: View {
             }
             
             HStack(spacing: 12) {
-                PlanStatBox(value: "∞", label: "CVs subidos")
+                // Removed CV stats
                 PlanStatBox(value: "5", label: "Pub. por día")
             }
             
@@ -647,7 +633,7 @@ struct MiPerfilView: View {
                     
                     Text("$9.99/mes")
                         .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                 }
                 
                 Spacer()
@@ -685,11 +671,11 @@ struct MiPerfilView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Uso del Plan")
                 .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(.textPrimary)
             
             VStack(spacing: 16) {
                 UsageBar(label: "Publicaciones hoy", current: 2, total: 5, color: .primaryOrange)
-                UsageBar(label: "CVs subidos", current: 3, total: nil, color: .green)
+                // Removed CV usage bar
             }
         }
         .padding(16)
@@ -705,7 +691,7 @@ struct MiPerfilView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Beneficios Premium")
                 .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(.textPrimary)
             
             VStack(spacing: 12) {
                 BenefitRow(
@@ -760,7 +746,7 @@ struct StatItem: View {
         VStack(spacing: 4) {
             Text(value)
                 .font(.system(size: 18, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(.textPrimary)
             
             Text(label)
                 .font(.system(size: 12))
@@ -806,13 +792,17 @@ struct QuickActionButton: View {
                 
                 Text(title)
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
                 
                 Spacer()
             }
             .padding(12)
-            .background(Color(red: 20/255, green: 22/255, blue: 28/255))
+            .background(Color(hex: "0D1117").opacity(0.05))
             .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color(hex: "0D1117").opacity(0.1), lineWidth: 1)
+            )
         }
     }
 }
@@ -822,6 +812,7 @@ struct DocumentRow: View {
     let iconColor: Color
     let title: String
     let subtitle: String
+    var backgroundColor: Color = Color.cardBackground
     
     var body: some View {
         HStack(spacing: 12) {
@@ -838,7 +829,7 @@ struct DocumentRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
                     .lineLimit(1)
                 
                 Text(subtitle)
@@ -850,13 +841,13 @@ struct DocumentRow: View {
             
             Button(action: {}) {
                 Image(systemName: "ellipsis")
-                    .font(.system(size: 14))
-                    .foregroundColor(.textSecondary)
-                    .rotationEffect(.degrees(90))
+                .font(.system(size: 14))
+                .foregroundColor(.textSecondary)
+                .rotationEffect(.degrees(90))
             }
         }
         .padding(12)
-        .background(Color(red: 20/255, green: 22/255, blue: 28/255))
+        .background(backgroundColor)
         .cornerRadius(8)
     }
 }
@@ -1212,7 +1203,7 @@ struct BenefitRow: View {
     }
 }
 
-// MARK: - Preview 
+// MARK: - Preview
 #Preview {
     NavigationView {
         MiPerfilView()
