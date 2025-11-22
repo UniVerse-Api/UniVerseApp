@@ -28,9 +28,9 @@ struct JobBenefit: Identifiable {
 
 struct DetalleEmpleoView: View {
     let oferta: OfertaEstudiante
+    var hasApplied: Bool = false // Track if user has already applied
     
     @State private var isBookmarked = false
-    @State private var showApplicationView = false
     @State private var beneficios: [String] = []
     @State private var isLoadingBeneficios = false
     
@@ -83,6 +83,16 @@ struct DetalleEmpleoView: View {
         .navigationBarHidden(true)
         .task {
             await loadBeneficios()
+        }
+        .onAppear {
+            // Listen for notification to switch to todos tab (pop to root)
+            NotificationCenter.default.addObserver(
+                forName: NSNotification.Name("SwitchToTodosTab"),
+                object: nil,
+                queue: .main
+            ) { _ in
+                presentationMode.wrappedValue.dismiss()
+            }
         }
     }
     
@@ -417,22 +427,37 @@ struct DetalleEmpleoView: View {
                 .fill(Color.borderColor)
                 .frame(height: 1)
             
-            Button(action: {
-                showApplicationView = true
-            }) {
+            if hasApplied {
+                // Already applied - show disabled state
                 HStack(spacing: 8) {
-                    Image(systemName: "paperplane.fill")
-                    Text("Aplicar Ahora")
+                    Image(systemName: "checkmark.circle.fill")
+                    Text("Ya Aplicaste")
                 }
                 .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.black)
+                .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
-                .background(Color.primaryOrange)
+                .background(Color.gray)
                 .cornerRadius(8)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+            } else {
+                // Can apply - show active button
+                NavigationLink(destination: AplicarEmpleoView(oferta: oferta)) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "paperplane.fill")
+                        Text("Aplicar Ahora")
+                    }
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color.primaryOrange)
+                    .cornerRadius(8)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
         }
         .background(Color.cardBackground.opacity(0.95))
         .backdrop()

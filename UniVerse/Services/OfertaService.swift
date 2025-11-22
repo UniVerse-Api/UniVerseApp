@@ -167,4 +167,85 @@ class OfertaService: ObservableObject {
             throw OfertaError.networkError(error.localizedDescription)
         }
     }
+    
+    /// Aplica a una oferta de empleo
+    /// - Parameters:
+    ///   - idOferta: ID de la oferta
+    ///   - idPerfil: ID del perfil del estudiante
+    ///   - cartaPresentacion: Carta de presentación
+    ///   - emailContacto: Email de contacto
+    ///   - telefono: Teléfono
+    ///   - disponibilidad: Disponibilidad para empezar
+    /// - Returns: Resultado de la aplicación
+    func aplicarEmpleo(
+        idOferta: Int,
+        idPerfil: Int,
+        cartaPresentacion: String,
+        emailContacto: String,
+        telefono: String,
+        disponibilidad: String
+    ) async throws -> AplicacionResponse {
+        print("DEBUG OfertaService: aplicarEmpleo called for oferta: \(idOferta), perfil: \(idPerfil)")
+        
+        do {
+            struct AplicarEmpleoParams: Encodable {
+                let p_id_oferta: Int
+                let p_id_perfil: Int
+                let p_carta_presentacion: String
+                let p_email_contacto: String
+                let p_telefono: String
+                let p_disponibilidad: String
+            }
+            
+            let params = AplicarEmpleoParams(
+                p_id_oferta: idOferta,
+                p_id_perfil: idPerfil,
+                p_carta_presentacion: cartaPresentacion,
+                p_email_contacto: emailContacto,
+                p_telefono: telefono,
+                p_disponibilidad: disponibilidad
+            )
+            
+            let response = try await client.rpc(
+                "aplicar_empleo",
+                params: params
+            ).execute()
+            let data = response.data
+            
+            // DEBUG: Ver el JSON crudo
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("DEBUG OfertaService: Raw aplicacion response JSON: \(jsonString)")
+            }
+            
+            let decoder = JSONDecoder()
+            let results = try decoder.decode([AplicacionResponse].self, from: data)
+            
+            guard let result = results.first else {
+                throw OfertaError.invalidResponse
+            }
+            
+            print("DEBUG OfertaService: Aplicación result: success=\(result.success), message=\(result.message)")
+            return result
+            
+        } catch let error as PostgrestError {
+            print("DEBUG OfertaService: PostgrestError: \(error.localizedDescription)")
+            throw OfertaError.networkError(error.localizedDescription)
+        } catch {
+            print("DEBUG OfertaService: General error: \(error.localizedDescription)")
+            throw OfertaError.networkError(error.localizedDescription)
+        }
+    }
+}
+
+// MARK: - Aplicacion Response
+struct AplicacionResponse: Codable {
+    let success: Bool
+    let message: String
+    let idAplicacion: Int?
+    
+    enum CodingKeys: String, CodingKey {
+        case success
+        case message
+        case idAplicacion = "id_aplicacion"
+    }
 }

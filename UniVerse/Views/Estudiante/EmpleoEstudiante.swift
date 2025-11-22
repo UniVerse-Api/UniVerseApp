@@ -27,6 +27,7 @@ struct EmpleosEstudianteView: View {
     @StateObject private var ofertaService = OfertaService()
     @State private var ofertas: [OfertaEstudiante] = []
     @State private var aplicaciones: [AplicacionEstudiante] = []
+    @State private var appliedJobIds: Set<Int> = [] // Track which jobs user has applied to
     @State private var isLoading = false
     @State private var errorMessage: String?
     
@@ -97,7 +98,28 @@ struct EmpleosEstudianteView: View {
                                     )
                                 } else {
                                     ForEach(aplicaciones) { aplicacion in
-                                        ApplicationCardView(aplicacion: aplicacion)
+                                        NavigationLink(destination: DetalleEmpleoView(
+                                            oferta: OfertaEstudiante(
+                                                id: aplicacion.idOferta,
+                                                titulo: aplicacion.titulo,
+                                                descripcion: "",
+                                                salarioRango: "",
+                                                tipoOferta: aplicacion.tipoOferta,
+                                                ubicacion: aplicacion.ubicacion,
+                                                fechaPublicacion: aplicacion.fechaAplicacion,
+                                                fechaLimite: nil,
+                                                idPerfilEmpresa: 0,
+                                                nombreCompleto: aplicacion.nombreEmpresa,
+                                                fotoPerfil: aplicacion.fotoPerfil,
+                                                ubicacionEmpresa: aplicacion.ubicacion,
+                                                requisitos: [],
+                                                esPremium: false
+                                            ),
+                                            hasApplied: true
+                                        )) {
+                                            ApplicationCardView(aplicacion: aplicacion)
+                                        }
+                                        .buttonStyle(PlainButtonStyle())
                                     }
                                 }
                             } else {
@@ -110,7 +132,10 @@ struct EmpleosEstudianteView: View {
                                     )
                                 } else {
                                     ForEach(filteredOfertas) { oferta in
-                                        NavigationLink(destination: DetalleEmpleoView(oferta: oferta)) {
+                                        NavigationLink(destination: DetalleEmpleoView(
+                                            oferta: oferta,
+                                            hasApplied: appliedJobIds.contains(oferta.id)
+                                        )) {
                                             OfertaCardView(
                                                 oferta: oferta,
                                                 isBookmarked: bookmarkedJobs.contains(oferta.id),
@@ -146,6 +171,24 @@ struct EmpleosEstudianteView: View {
                 print("===================================")
             } else {
                 print("⚠️ WARNING: No hay usuario autenticado en EmpleosEstudianteView")
+            }
+            
+            // Listen for notification to switch to applications tab
+            NotificationCenter.default.addObserver(
+                forName: NSNotification.Name("SwitchToApplicationsTab"),
+                object: nil,
+                queue: .main
+            ) { _ in
+                selectedFilter = .misAplicaciones
+            }
+            
+            // Listen for notification to switch to todos tab
+            NotificationCenter.default.addObserver(
+                forName: NSNotification.Name("SwitchToTodosTab"),
+                object: nil,
+                queue: .main
+            ) { _ in
+                selectedFilter = .todos
             }
         }
         .task {
@@ -248,6 +291,10 @@ struct EmpleosEstudianteView: View {
             
             print("✅ DEBUG loadData: Ofertas cargadas: \(fetchedOfertas.count)")
             print("✅ DEBUG loadData: Aplicaciones cargadas: \(fetchedAplicaciones.count)")
+            
+            // Extract applied job IDs from applications
+            appliedJobIds = Set(aplicaciones.map { $0.idOferta })
+            print("DEBUG EmpleosEstudianteView: User has applied to \(appliedJobIds.count) jobs")
             
         } catch {
             errorMessage = error.localizedDescription

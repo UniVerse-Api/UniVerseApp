@@ -2,42 +2,24 @@
 // Views/Estudiante/AplicarEmpleoView.swift
 import SwiftUI
 
-enum CVOption {
-    case existing
-    case upload
-}
 
-struct Job {
-    let title: String
-    let company: String
-    let logoUrl: String
-    let location: String
-    let type: String
-    let isVerified: Bool
-}
 
 struct AplicarEmpleoView: View {
-    @State private var selectedCV: CVOption = .existing
+    let oferta: OfertaEstudiante
+    
     @State private var coverLetter = ""
-    @State private var email = "maria.rodriguez@email.com"
-    @State private var phone = "+1 (555) 123-4567"
+    @State private var email = ""
+    @State private var phone = ""
     @State private var availability = "Inmediatamente"
-    @State private var hasWorkAuth = false
     @State private var showSuccessModal = false
     @State private var isSubmitting = false
+    @State private var errorMessage: String?
     
+    @StateObject private var ofertaService = OfertaService()
+    @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.presentationMode) var presentationMode
     
     let availabilityOptions = ["Inmediatamente", "En 2 semanas", "En 1 mes", "En 2 meses", "Otro"]
-    
-    let job = Job(
-        title: "Desarrollador Full Stack Junior",
-        company: "Innovate Inc.",
-        logoUrl: "building.2.fill",
-        location: "San Francisco, CA",
-        type: "Tiempo Completo",
-        isVerified: true
-    )
     
     var characterCount: Int {
         coverLetter.count
@@ -45,7 +27,7 @@ struct AplicarEmpleoView: View {
     
     var body: some View {
         ZStack {
-            Color.backgroundDark.ignoresSafeArea()
+            Color.backgroundLight.ignoresSafeArea()
             
             VStack(spacing: 0) {
                 // MARK: - Header
@@ -56,9 +38,6 @@ struct AplicarEmpleoView: View {
                     VStack(spacing: 16) {
                         // Job Info Card
                         jobInfoCard
-                        
-                        // CV Selection
-                        cvSelectionSection
                         
                         // Cover Letter
                         coverLetterSection
@@ -92,6 +71,9 @@ struct AplicarEmpleoView: View {
             }
         }
         .navigationBarHidden(true)
+        .onAppear {
+            loadUserData()
+        }
     }
     
     // MARK: - Header Section
@@ -103,13 +85,13 @@ struct AplicarEmpleoView: View {
                 }) {
                     Image(systemName: "arrow.left")
                         .font(.system(size: 18))
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                         .padding(8)
                 }
                 
                 Text("Aplicar a Empleo")
                     .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
                 
                 Spacer()
             }
@@ -120,7 +102,7 @@ struct AplicarEmpleoView: View {
                 .fill(Color.borderColor)
                 .frame(height: 1)
         }
-        .background(Color.backgroundDark.opacity(0.8))
+        .background(Color.backgroundLight.opacity(0.95))
         .backdrop()
     }
     
@@ -128,28 +110,48 @@ struct AplicarEmpleoView: View {
     private var jobInfoCard: some View {
         HStack(spacing: 12) {
             // Company Logo
-            ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.white)
-                    .frame(width: 64, height: 64)
-                
-                Image(systemName: job.logoUrl)
-                    .font(.system(size: 32))
-                    .foregroundColor(.blue)
+            if let fotoPerfil = oferta.fotoPerfil, !fotoPerfil.isEmpty {
+                AsyncImage(url: URL(string: fotoPerfil)) { image in
+                    image
+                        .resizable()
+                        .scaledToFill()
+                } placeholder: {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.blue.opacity(0.2))
+                            .frame(width: 64, height: 64)
+                        
+                        Image(systemName: "building.2.fill")
+                            .font(.system(size: 32))
+                            .foregroundColor(.blue)
+                    }
+                }
+                .frame(width: 64, height: 64)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            } else {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.blue.opacity(0.2))
+                        .frame(width: 64, height: 64)
+                    
+                    Image(systemName: "building.2.fill")
+                        .font(.system(size: 32))
+                        .foregroundColor(.blue)
+                }
             }
             
             // Job Details
             VStack(alignment: .leading, spacing: 4) {
-                Text(job.title)
+                Text(oferta.titulo)
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
                 
                 HStack(spacing: 6) {
-                    Text(job.company)
+                    Text(oferta.nombreCompleto)
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.textSecondary)
                     
-                    if job.isVerified {
+                    if oferta.esPremium {
                         ZStack {
                             Circle()
                                 .fill(
@@ -172,14 +174,14 @@ struct AplicarEmpleoView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "location.fill")
                             .font(.system(size: 10))
-                        Text(job.location)
+                        Text(oferta.ubicacion)
                             .font(.system(size: 11))
                     }
                     
                     HStack(spacing: 4) {
                         Image(systemName: "clock.fill")
                             .font(.system(size: 10))
-                        Text(job.type)
+                        Text(oferta.tipoOferta.displayName)
                             .font(.system(size: 11))
                     }
                 }
@@ -196,98 +198,7 @@ struct AplicarEmpleoView: View {
                 .stroke(Color.borderColor, lineWidth: 1)
         )
     }
-    
-    // MARK: - CV Selection Section
-    private var cvSelectionSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                Image(systemName: "doc.text.fill")
-                    .font(.system(size: 16))
-                    .foregroundColor(.primaryOrange)
-                
-                Text("Currículum Vitae")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
-            }
-            
-            VStack(spacing: 12) {
-                // Existing CV Option
-                Button(action: {
-                    selectedCV = .existing
-                }) {
-                    HStack(spacing: 12) {
-                        Image(systemName: selectedCV == .existing ? "circle.inset.filled" : "circle")
-                            .font(.system(size: 20))
-                            .foregroundColor(.primaryOrange)
-                        
-                        Image(systemName: "doc.fill")
-                            .font(.system(size: 24))
-                            .foregroundColor(.red)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("CV_Actualizado_2024.pdf")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.white)
-                            
-                            Text("Subido: 15 Oct 2024 • 2.3 MB")
-                                .font(.system(size: 11))
-                                .foregroundColor(.textSecondary)
-                        }
-                        
-                        Spacer()
-                    }
-                    .padding(12)
-                    .background(Color(red: 30/255, green: 30/255, blue: 30/255))
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(selectedCV == .existing ? Color.primaryOrange : Color.borderColor, lineWidth: selectedCV == .existing ? 2 : 1)
-                    )
-                }
-                
-                // Upload New CV Option
-                Button(action: {
-                    selectedCV = .upload
-                }) {
-                    HStack(spacing: 12) {
-                        Image(systemName: selectedCV == .upload ? "circle.inset.filled" : "circle")
-                            .font(.system(size: 20))
-                            .foregroundColor(.primaryOrange)
-                        
-                        Image(systemName: "arrow.up.doc.fill")
-                            .font(.system(size: 24))
-                            .foregroundColor(.textSecondary)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Subir nuevo CV")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.white)
-                            
-                            Text("Formatos: PDF, DOC, DOCX (Max 5MB)")
-                                .font(.system(size: 11))
-                                .foregroundColor(.textSecondary)
-                        }
-                        
-                        Spacer()
-                    }
-                    .padding(12)
-                    .background(Color(red: 30/255, green: 30/255, blue: 30/255))
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(selectedCV == .upload ? Color.primaryOrange : Color.borderColor, lineWidth: selectedCV == .upload ? 2 : 1)
-                    )
-                }
-            }
-        }
-        .padding(16)
-        .background(Color.cardBackground)
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.borderColor, lineWidth: 1)
-        )
-    }
+
     
     // MARK: - Cover Letter Section
     private var coverLetterSection: some View {
@@ -299,20 +210,20 @@ struct AplicarEmpleoView: View {
                 
                 Text("Carta de Presentación")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
             }
             
             VStack(spacing: 8) {
                 TextEditor(text: $coverLetter)
                     .frame(height: 120)
                     .padding(8)
-                    .background(Color(red: 30/255, green: 30/255, blue: 30/255))
+                    .background(Color.inputBackground)
                     .cornerRadius(8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(Color.borderColor, lineWidth: 1)
                     )
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
                 
                 HStack {
                     Text("Mínimo 50 caracteres recomendado")
@@ -346,7 +257,7 @@ struct AplicarEmpleoView: View {
                 
                 Text("Información de Contacto")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
             }
             
             VStack(spacing: 12) {
@@ -355,15 +266,15 @@ struct AplicarEmpleoView: View {
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.textSecondary)
                     
-                    TextField("tu.email@ejemplo.com", text: $email)
+                    TextField("correo@ejemplo.com", text: $email)
                         .padding(12)
-                        .background(Color(red: 30/255, green: 30/255, blue: 30/255))
+                        .background(Color.inputBackground)
                         .cornerRadius(8)
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color.borderColor, lineWidth: 1)
                         )
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                         .keyboardType(.emailAddress)
                         .autocapitalization(.none)
                 }
@@ -375,13 +286,13 @@ struct AplicarEmpleoView: View {
                     
                     TextField("+1 (555) 123-4567", text: $phone)
                         .padding(12)
-                        .background(Color(red: 30/255, green: 30/255, blue: 30/255))
+                        .background(Color.inputBackground)
                         .cornerRadius(8)
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color.borderColor, lineWidth: 1)
                         )
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                         .keyboardType(.phonePad)
                 }
             }
@@ -405,7 +316,7 @@ struct AplicarEmpleoView: View {
                 
                 Text("Información Adicional")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
             }
             
             VStack(spacing: 12) {
@@ -423,7 +334,7 @@ struct AplicarEmpleoView: View {
                     } label: {
                         HStack {
                             Text(availability)
-                                .foregroundColor(.white)
+                                .foregroundColor(.textPrimary)
                             
                             Spacer()
                             
@@ -431,29 +342,12 @@ struct AplicarEmpleoView: View {
                                 .foregroundColor(.textSecondary)
                         }
                         .padding(12)
-                        .background(Color(red: 30/255, green: 30/255, blue: 30/255))
+                        .background(Color.inputBackground)
                         .cornerRadius(8)
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color.borderColor, lineWidth: 1)
                         )
-                    }
-                }
-                
-                Button(action: {
-                    hasWorkAuth.toggle()
-                }) {
-                    HStack(alignment: .top, spacing: 12) {
-                        Image(systemName: hasWorkAuth ? "checkmark.square.fill" : "square")
-                            .font(.system(size: 20))
-                            .foregroundColor(hasWorkAuth ? .primaryOrange : .textSecondary)
-                        
-                        Text("Confirmo que tengo autorización legal para trabajar en Estados Unidos")
-                            .font(.system(size: 13))
-                            .foregroundColor(.textSecondary)
-                            .multilineTextAlignment(.leading)
-                        
-                        Spacer()
                     }
                 }
             }
@@ -534,7 +428,7 @@ struct AplicarEmpleoView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color.backgroundDark)
+        .background(Color.backgroundLight)
         .overlay(
             Rectangle()
                 .fill(Color.borderColor)
@@ -568,9 +462,9 @@ struct AplicarEmpleoView: View {
                 VStack(spacing: 8) {
                     Text("¡Aplicación Enviada!")
                         .font(.system(size: 22, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                     
-                    Text("Tu aplicación ha sido enviada exitosamente a **Innovate Inc.** Recibirás una confirmación por email y te notificaremos sobre el estado de tu aplicación.")
+                    Text("Tu aplicación ha sido enviada exitosamente a **Innovate Inc.** Puedes consultar en cualquier momentoel estado de tu aplicación.")
                         .font(.system(size: 14))
                         .foregroundColor(.textSecondary)
                         .multilineTextAlignment(.center)
@@ -581,7 +475,10 @@ struct AplicarEmpleoView: View {
                 VStack(spacing: 12) {
                     Button(action: {
                         showSuccessModal = false
-                        // Navigate to applications
+                        // Navigate back to job list and switch to applications tab
+                        presentationMode.wrappedValue.dismiss()
+                        // Post notification to switch tab
+                        NotificationCenter.default.post(name: NSNotification.Name("SwitchToApplicationsTab"), object: nil)
                     }) {
                         Text("Ver Mis Aplicaciones")
                             .font(.system(size: 15, weight: .semibold))
@@ -595,10 +492,12 @@ struct AplicarEmpleoView: View {
                     Button(action: {
                         showSuccessModal = false
                         presentationMode.wrappedValue.dismiss()
+                        // Post notification to switch to Todos tab
+                        NotificationCenter.default.post(name: NSNotification.Name("SwitchToTodosTab"), object: nil)
                     }) {
                         Text("Seguir Buscando Empleos")
                             .font(.system(size: 15, weight: .semibold))
-                            .foregroundColor(.white)
+                            .foregroundColor(.textPrimary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                             .background(Color.gray.opacity(0.3))
@@ -619,12 +518,66 @@ struct AplicarEmpleoView: View {
     
     // MARK: - Submit Application
     private func submitApplication() {
-        isSubmitting = true
+        guard let perfil = authViewModel.currentUser?.perfil else {
+            errorMessage = "No se pudo obtener el perfil del usuario"
+            return
+        }
         
-        // Simulate API call
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            isSubmitting = false
-            showSuccessModal = true
+        // Validar campos requeridos
+        guard !coverLetter.isEmpty else {
+            errorMessage = "La carta de presentación es requerida"
+            return
+        }
+        
+        guard !email.isEmpty else {
+            errorMessage = "El email es requerido"
+            return
+        }
+        
+        guard !phone.isEmpty else {
+            errorMessage = "El teléfono es requerido"
+            return
+        }
+        
+        isSubmitting = true
+        errorMessage = nil
+        
+        Task {
+            do {
+                let result = try await ofertaService.aplicarEmpleo(
+                    idOferta: oferta.id,
+                    idPerfil: perfil.id,
+                    cartaPresentacion: coverLetter,
+                    emailContacto: email,
+                    telefono: phone,
+                    disponibilidad: availability
+                )
+                
+                await MainActor.run {
+                    isSubmitting = false
+                    if result.success {
+                        showSuccessModal = true
+                    } else {
+                        errorMessage = result.message
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    isSubmitting = false
+                    errorMessage = "Error al enviar la aplicación: \(error.localizedDescription)"
+                }
+            }
+        }
+    }
+    
+    // MARK: - Load User Data
+    private func loadUserData() {
+        if let perfil = authViewModel.currentUser?.perfil {
+            // Pre-fill phone if available
+            if !perfil.telefono.isEmpty {
+                phone = perfil.telefono
+            }
+            // Email will be entered manually by user
         }
     }
 }
@@ -632,7 +585,23 @@ struct AplicarEmpleoView: View {
 // MARK: - Preview
 #Preview {
     NavigationView {
-        AplicarEmpleoView()
+        AplicarEmpleoView(oferta: OfertaEstudiante(
+            id: 1,
+            titulo: "Desarrollador Full Stack Junior",
+            descripcion: "Buscamos un desarrollador Full Stack apasionado para unirse a nuestro equipo.",
+            salarioRango: "$1,500 - $2,500 USD",
+            tipoOferta: .tiempoCompleto,
+            ubicacion: "San Salvador, El Salvador",
+            fechaPublicacion: Date().addingTimeInterval(-86400 * 3),
+            fechaLimite: Date().addingTimeInterval(86400 * 20),
+            idPerfilEmpresa: 1,
+            nombreCompleto: "Innovate Inc.",
+            fotoPerfil: nil,
+            ubicacionEmpresa: "San Salvador, El Salvador",
+            requisitos: ["Swift", "SwiftUI", "Node.js", "React"],
+            esPremium: true
+        ))
     }
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
+    .environmentObject(AuthViewModel())
 }
