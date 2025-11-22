@@ -281,15 +281,19 @@ struct Contadores: Codable {
 
 // MARK: - Destacado
 struct Destacado: Codable {
-    let idDestacado: Int
-    let idUniversidad: Int
+    let idPerfil: Int
+    let nombre: String
+    let rol: String
     let comentario: String?
-    let nombreUniversidad: String?
+    let fotoPerfil: String?
+    let fechaCreacion: String
     
     enum CodingKeys: String, CodingKey {
-        case idDestacado = "id_destacado"
-        case idUniversidad = "id_universidad"
+        case idPerfil = "id_perfil"
+        case nombre
+        case rol
         case comentario
-        case nombreUniversidad = "nombre_universidad"
+        case fotoPerfil = "foto_perfil"
+        case fechaCreacion = "fecha_creacion"
     }
 }
