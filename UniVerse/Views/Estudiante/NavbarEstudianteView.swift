@@ -18,7 +18,7 @@ struct NavbarEstudianteView: View {
                 FeedView()
                     .tag(0)
                 
-                RedEstudianteView()
+                NetworkView()
                     .tag(1)
                 
                 EmpleosEstudianteView()

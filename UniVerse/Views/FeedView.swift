@@ -728,6 +728,15 @@ struct FeedView: View {
                 
                 // Action Buttons
                 HStack(spacing: 12) {
+                    NavigationLink(destination: NetworkView().environmentObject(authVM)) {
+                        Image(systemName: "person.2")
+                            .font(.system(size: 16))
+                            .foregroundColor(.primaryOrange)
+                            .padding(8)
+                            .background(Color.primaryOrange.opacity(0.15))
+                            .clipShape(Circle())
+                    }
+
                     Button(action: {
                         showingCreatePost = true
                     }) {
