@@ -77,7 +77,40 @@ class StorageService {
             throw StorageError.uploadFailed(error.localizedDescription)
         }
     }
-    
+
+    // MARK: - Post Image Upload
+    func uploadPostImage(_ image: UIImage, userId: String) async throws -> String {
+        // Convertir String a UUID
+        guard let userUUID = UUID(uuidString: userId) else {
+            throw StorageError.uploadFailed("ID de usuario inválido")
+        }
+
+        // Comprimir la imagen
+        guard let imageData = compressImage(image) else {
+            throw StorageError.compressionFailed
+        }
+
+        let fileName = "post_\(userUUID.uuidString)_\(Int(Date().timeIntervalSince1970)).jpg"
+
+        do {
+            // Subir a bucket publicaciones en carpeta posts
+            let path = try await supabase.storage
+                .from("publicaciones")
+                .upload(path: "posts/\(fileName)", file: imageData, options: FileOptions(contentType: "image/jpeg"))
+
+            // Obtener URL público
+            let url = try supabase.storage
+                .from("publicaciones")
+                .getPublicURL(path: "posts/\(fileName)")
+
+            return url.absoluteString
+
+        } catch {
+            print("[ERROR] Error subiendo imagen de publicación: \(error)")
+            throw StorageError.uploadFailed(error.localizedDescription)
+        }
+    }
+
     // MARK: - Delete Files
     func deleteAvatar(fileName: String) async throws {
         do {

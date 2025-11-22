@@ -5,6 +5,7 @@ import Foundation
 struct FeedView: View {
     @EnvironmentObject var authVM: AuthViewModel
     @StateObject private var feedVM = FeedViewModel()
+    @State private var showingCreatePost = false
     
     var body: some View {
         ZStack {
@@ -47,6 +48,10 @@ struct FeedView: View {
             }
         }
         .navigationBarHidden(true)
+        .sheet(isPresented: $showingCreatePost) {
+            CreatePostView()
+                .environmentObject(authVM)
+        }
     }
     
     // MARK: - Feed Content
@@ -723,6 +728,17 @@ struct FeedView: View {
                 
                 // Action Buttons
                 HStack(spacing: 12) {
+                    Button(action: {
+                        showingCreatePost = true
+                    }) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 16))
+                            .foregroundColor(.primaryOrange)
+                            .padding(8)
+                            .background(Color.primaryOrange.opacity(0.15))
+                            .clipShape(Circle())
+                    }
+
                     Button(action: {
                         Task {
                             await authVM.reloadCurrentUser()
